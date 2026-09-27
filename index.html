@@ -7,9 +7,11 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>Ritam Enterprise</title>
-  <link rel="manifest" href="manifest.json?v=4" />
-  <link rel="icon" type="image/svg+xml" href="icon.svg?v=4" />
-  <link rel="apple-touch-icon" href="icon.svg?v=4" />
+  <link rel="manifest" href="manifest.json?v=5" />
+  <link rel="icon" type="image/svg+xml" href="icon.svg?v=5" />
+  <link rel="icon" type="image/png" sizes="512x512" href="icon.svg?v=5" />
+  <link rel="apple-touch-icon" sizes="180x180" href="icon.svg?v=5" />
+  <meta name="apple-mobile-web-app-title" content="Ritam Enterprise" />
   <style>
     :root{--bg:#f6f8fc;--surface:#fff;--card:#fff;--text:#0b1220;--muted:#64748b;--line:#e5eaf2;--primary:#0b1220;--accent:#2563eb;--accent-soft:#eff6ff;--danger:#dc2626;--ok:#16a34a;--shadow:0 10px 35px rgba(15,23,42,.06);--shadow-lg:0 20px 60px rgba(15,23,42,.10);--radius:16px}
     *{box-sizing:border-box}html{color-scheme:light}body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text);transition:background .2s,color .2s}button,input,select,textarea{font:inherit}button{cursor:pointer}.hidden{display:none!important}
@@ -41,7 +43,7 @@
     .app{grid-template-columns:264px 1fr}
     .side{padding:22px 15px;background:#0a1220;border-right:1px solid #172338}
     .brand-wrap{display:flex;align-items:center;gap:11px;margin:0 10px 30px}
-    .brand-mark{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;background:linear-gradient(135deg,#2563eb,#60a5fa);color:#fff;font-weight:900;box-shadow:0 8px 22px rgba(37,99,235,.28)}
+    .brand-mark{width:42px;height:42px;border-radius:11px;display:block;object-fit:cover;box-shadow:0 8px 22px rgba(37,99,235,.28);flex:0 0 auto}
     .brand-copy strong{display:block;color:#fff;font-size:15px;letter-spacing:-.2px}.brand-copy span{display:block;color:#64748b;font-size:10px;margin-top:2px;text-transform:uppercase;letter-spacing:1.2px}
     .nav-section{font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:#52627a;font-weight:800;margin:0 10px 8px}
     .nav button{gap:12px;padding:11px 12px;color:#93a4bc;border-radius:12px}
@@ -68,7 +70,7 @@
     .status-dot{width:7px;height:7px;border-radius:50%;display:inline-block;background:#22c55e;margin-right:5px}.status-dot.warn{background:#f59e0b}.status-dot.danger{background:#ef4444}
     body.dark .dashboard-hero{background:linear-gradient(135deg,#111b2b,#102142)}body.dark .quick-action{background:#0e1726}body.dark .quick-action:hover{background:#14284b;border-color:#315b9c}.theme-toggle{box-shadow:none}
     @media(max-width:1000px){.dashboard-grid,.dashboard-bottom{grid-template-columns:1fr}.main{padding:22px}.app{grid-template-columns:230px 1fr}}
-    @media(max-width:700px){.app{display:block}.side{height:auto;position:sticky;top:0;z-index:10;padding:11px 12px}.brand-wrap{margin:0 3px 9px}.brand-copy span{display:none}.brand-mark{width:34px;height:34px}.nav-section{display:none}.nav{gap:4px}.nav button{flex:0 0 auto;width:auto;padding:9px 10px}.nav-label{font-size:11px}.nav-arrow{display:none}.nav-icon{width:17px}.side-bottom{display:none}.main{padding:16px}.top{margin-bottom:16px}.top h2{font-size:23px}.top-actions .theme-toggle span:last-child{display:none}.dashboard-hero{padding:18px;align-items:flex-start}.hero-actions{display:none}.stats{grid-template-columns:1fr 1fr}.stat-card{padding:15px}.stat-value{font-size:21px}.quick-grid{grid-template-columns:1fr 1fr}}
+    @media(max-width:700px){.app{display:block}.side{height:auto;position:sticky;top:0;z-index:10;padding:11px 12px}.brand-wrap{margin:0 3px 9px}.brand-copy span{display:none}.brand-mark{width:38px;height:38px}.nav-section{display:none}.nav{gap:4px}.nav button{flex:0 0 auto;width:auto;padding:9px 10px}.nav-label{font-size:11px}.nav-arrow{display:none}.nav-icon{width:17px}.side-bottom{display:none}.main{padding:16px}.top{margin-bottom:16px}.top h2{font-size:23px}.top-actions .theme-toggle span:last-child{display:none}.dashboard-hero{padding:18px;align-items:flex-start}.hero-actions{display:none}.stats{grid-template-columns:1fr 1fr}.stat-card{padding:15px}.stat-value{font-size:21px}.quick-grid{grid-template-columns:1fr 1fr}}
 
   </style>
 </head>
@@ -88,7 +90,7 @@
 
 <div id="app" class="app hidden">
   <aside class="side">
-    <div class="brand-wrap"><div class="brand-mark">R</div><div class="brand-copy"><strong>Ritam Enterprise</strong><span>Business Suite</span></div></div>
+    <div class="brand-wrap"><img class="brand-mark" src="icon.svg?v=5" alt="Ritam Enterprise logo" /><div class="brand-copy"><strong>Ritam Enterprise</strong><span>Business Suite</span></div></div>
     <div class="nav-section">Workspace</div>
     <nav class="nav" id="nav">
       <button data-page="dashboard" class="active"><span class="nav-icon">◉</span><span class="nav-label">Dashboard</span><span class="nav-arrow">›</span></button>

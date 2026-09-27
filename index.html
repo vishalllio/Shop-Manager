@@ -7,9 +7,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>Ritam Enterprise</title>
-  <link rel="manifest" href="manifest.json?v=17" />
-  <link rel="icon" type="image/svg+xml" href="icon.svg?v=17" />
-  <link rel="icon" type="image/png" sizes="512x512" href="icon.svg?v=17" />
+  <link rel="manifest" href="manifest.json?v=18" />
+  <link rel="icon" type="image/svg+xml" href="icon.svg?v=18" />
+  <link rel="icon" type="image/png" sizes="512x512" href="icon.svg?v=18" />
   <meta name="apple-mobile-web-app-title" content="Ritam Enterprise" />
   <style>
     :root{--bg:#f6f8fc;--surface:#fff;--card:#fff;--text:#0b1220;--muted:#64748b;--line:#e5eaf2;--primary:#0b1220;--accent:#2563eb;--accent-soft:#eff6ff;--danger:#dc2626;--ok:#16a34a;--shadow:0 10px 35px rgba(15,23,42,.06);--shadow-lg:0 20px 60px rgba(15,23,42,.10);--radius:16px}
@@ -33,11 +33,6 @@
     .remember-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:8px 0 14px}
     .remember-label{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:13px;font-weight:650;cursor:pointer}
     .remember-label input{width:17px;height:17px;accent-color:var(--accent)}
-    .passkey-btn{display:flex;align-items:center;justify-content:center;gap:9px;margin-top:10px}
-    .passkey-icon{font-size:18px;line-height:1}
-    .auth-divider{display:flex;align-items:center;gap:10px;margin:15px 0;color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px}
-    .auth-divider:before,.auth-divider:after{content:"";height:1px;background:var(--line);flex:1}
-    .passkey-setup{margin-top:12px;padding:10px 12px;border:1px solid var(--line);border-radius:11px;background:var(--accent-soft);color:var(--text);font-size:12px}
 
     .app{min-height:100vh;display:grid;grid-template-columns:252px 1fr}.side{background:#0b1220;color:#cbd5e1;padding:20px 16px;position:sticky;top:0;height:100vh;border-right:1px solid #182338}.side h1{color:#fff;font-size:20px;margin:3px 8px 30px;letter-spacing:-.4px}.nav button{display:flex;align-items:center;width:100%;text-align:left;background:transparent;color:#94a3b8;border:0;padding:11px 12px;border-radius:11px;margin:4px 0;font-weight:650;transition:.18s}.nav button.active{background:linear-gradient(90deg,#2563eb,#3b82f6);color:#fff;box-shadow:0 7px 20px rgba(37,99,235,.22)}.nav button:hover{background:#162238;color:#fff}.side-bottom{position:absolute;bottom:18px;left:16px;right:16px}.main{padding:30px;max-width:1540px;width:100%;margin:auto}.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:24px}.top h2{margin:0;font-size:27px;letter-spacing:-.7px}.mobile-menu{display:none}
     .theme-toggle{display:inline-flex;align-items:center;gap:8px;background:var(--surface);color:var(--text);border:1px solid var(--line);border-radius:11px;padding:9px 12px;font-weight:700}.theme-toggle .theme-icon{font-size:16px}
@@ -88,9 +83,9 @@
     <div class="brand">Ritam Enterprise</div>
     <div class="sub">Shop management • Secure cloud login</div>
     <div id="authMsg"></div>
-    <form id="loginForm">
-      <div class="field"><label>Email</label><input id="email" type="email" autocomplete="username" /></div>
-      <div class="field"><label>Password</label><input id="password" type="password" autocomplete="current-password" /></div>
+    <form id="loginForm" autocomplete="off">
+      <div class="field"><label>Email</label><input id="email" type="email" autocomplete="off" /></div>
+      <div class="field"><label>Password</label><input id="password" type="password" autocomplete="new-password" /></div>
       <div class="remember-row">
         <label class="remember-label"><input id="rememberMe" type="checkbox" checked /> <span>Remember me</span></label>
       </div>
@@ -101,7 +96,7 @@
 
 <div id="app" class="app hidden">
   <aside class="side">
-    <div class="brand-wrap"><img class="brand-mark" src="icon.svg?v=17" alt="Ritam Enterprise logo" /><div class="brand-copy"><strong>Ritam Enterprise</strong><span>Business Suite</span></div></div>
+    <div class="brand-wrap"><img class="brand-mark" src="icon.svg?v=18" alt="Ritam Enterprise logo" /><div class="brand-copy"><strong>Ritam Enterprise</strong><span>Business Suite</span></div></div>
     <div class="nav-section">Workspace</div>
     <nav class="nav" id="nav">
       <button data-page="dashboard" class="active"><span class="nav-icon">◉</span><span class="nav-label">Dashboard</span><span class="nav-arrow">›</span></button>
@@ -473,6 +468,8 @@ $('loginForm').onsubmit=async e=>{
   e.preventDefault();
   const email=$('email').value.trim(), password=$('password').value;
   if(!email || !password){setAuthMessage('error','Enter your email and password.');return;}
+  if($('rememberMe').checked) localStorage.setItem('ritam-login-email',email);
+  else localStorage.removeItem('ritam-login-email');
   const button=e.target.querySelector('button[type="submit"]');
   if(button) button.disabled=true;
   setAuthMessage('success','Signing in…');
@@ -490,6 +487,11 @@ $('loginForm').onsubmit=async e=>{
 };
 
 initTheme();
+const rememberedEmail=localStorage.getItem('ritam-login-email');
+if(rememberedEmail){
+  $('email').value=rememberedEmail;
+  $('rememberMe').checked=true;
+}
 (async()=>{
   const {data:{session},error}=await sb.auth.getSession();
   if(error){

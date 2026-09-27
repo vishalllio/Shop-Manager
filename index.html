@@ -419,7 +419,7 @@ async function loginWithPasskey(){
   if(r.error){setAuthMessage('error',r.error.message);return;}
   await enterApp();
 }
-$('setupPasskey').onclick=setupPasskey;
+$('setupPasskey')?.addEventListener('click',setupPasskey);
 $('passkeyLogin').onclick=loginWithPasskey;
 
 $('loginForm').onsubmit=async e=>{

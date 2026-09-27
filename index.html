@@ -399,8 +399,11 @@ $('themeToggle').addEventListener('click',()=>applyTheme(document.body.classList
 $('quickBill').onclick=()=>{state.page='billing';render();setTimeout(billModal,0)};
 $('logout').onclick=async()=>{await sb.auth.signOut();location.reload()};
 
+let enteringApp=null;
 async function enterApp(){
-  try{await loadAll();showApp();}catch(err){setAuthMessage('error',err.message);}
+  if(enteringApp)return enteringApp;
+  enteringApp=(async()=>{try{setAuthMessage('success','Loading your workspace…');await loadAll();showApp();}catch(err){console.error(err);setAuthMessage('error','Login succeeded, but the shop data could not be loaded. Please try again.');}finally{enteringApp=null;}})();
+  return enteringApp;
 }
 $('loginForm').onsubmit=async e=>{
   e.preventDefault();
@@ -412,8 +415,8 @@ $('loginForm').onsubmit=async e=>{
   await enterApp();
 };
 
-sb.auth.onAuthStateChange(async (_event,session)=>{
-  if(session && $('app').classList.contains('hidden')) await enterApp();
+sb.auth.onAuthStateChange((_event,session)=>{
+  if(session && $('app').classList.contains('hidden')) enterApp();
 });
 initTheme();
 (async()=>{const {data:{session}}=await sb.auth.getSession();if(session){try{await loadAll();showApp()}catch(e){setAuthMessage('error',e.message)}}})();

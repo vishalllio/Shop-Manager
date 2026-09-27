@@ -305,7 +305,7 @@ function viewBillModal(b){
   $('closeViewBill').onclick=closeModal;
   const billText=`Ritam Enterprise\nBill ${b.bill_number}\nCustomer: ${c?.name||'Walk-in'}\nTotal: ${money(b.grand_total)}\nPaid: ${money(paid)}\nOutstanding: ${money(due)}`;
   const customerPhone=String(c?.phone||'').replace(/\D/g,'');
-  $('printBillBtn').onclick=()=>window.print();
+  $('printBillBtn').onclick=async()=>{try{const file=await createBillPdf(b,c,items,paid,due);const url=URL.createObjectURL(file);const w=window.open(url,'_blank');if(!w){const a=document.createElement('a');a.href=url;a.download='Ritam-Enterprise-'+b.bill_number+'.pdf';a.click();}setTimeout(()=>URL.revokeObjectURL(url),60000);}catch(e){alert(e?.message||'Could not create the PDF.');}};
   $('whatsappBillBtn').onclick=()=>{if(customerPhone.length<10){alert('Customer does not have a valid WhatsApp phone number. Add the number in Customers first.');return;}const message=billText+'\n\nThank you for your business.';window.open('https://wa.me/'+(customerPhone.startsWith('91')?customerPhone:'91'+customerPhone)+'?text='+encodeURIComponent(message),'_blank');};
   $('sharePdfBtn').onclick=async()=>{try{const file=await createBillPdf(b,c,items,paid,due);if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({title:'Ritam Enterprise Bill '+b.bill_number,text:billText,files:[file]});}else{const url=URL.createObjectURL(file);const a=document.createElement('a');a.href=url;a.download='Ritam-Enterprise-'+b.bill_number+'.pdf';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}}catch(e){alert(e?.message||'Could not create/share the PDF. Use Print / Save PDF instead.');}};
 }

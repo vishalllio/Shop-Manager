@@ -1,6 +1,7 @@
 {
   "name":"Ritam Enterprise",
   "short_name":"Ritam Enterprise",
+  "id":"./",
   "start_url":"./?v=5",
   "scope":"./",
   "display":"standalone",

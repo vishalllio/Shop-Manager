@@ -312,89 +312,96 @@ function viewBillModal(b){
 async function createBillPdf(b,c,items,paid,due){
   const {jsPDF}=await import('https://cdn.jsdelivr.net/npm/jspdf@2.5.1/+esm');
   const doc=new jsPDF({unit:'mm',format:'a4'});
-  const W=210,L=10,R=200,C=105;
-  let y=10;
+  const L=10,R=200,C=105,W=190;
+  let y=12;
   const shop=state.shop||{};
-  const dark=[18,28,45],muted=[90,98,108],line=[190,194,200],soft=[245,246,247],blue=[14,63,130];
+  const dark=[15,24,38],muted=[92,99,108],grid=[205,208,213],soft=[246,246,247],blue=[27,72,139],cyan=[44,166,230];
   const moneyPlain=n=>money(n).replace('₹','Rs. ');
   const txt=(s,x,yy,opt)=>doc.text(String(s??''),x,yy,opt);
-  const rule=(yy)=>{doc.setDrawColor(...line);doc.setLineWidth(.25);doc.line(L,yy,R,yy);};
-  doc.setTextColor(...dark);
+  const rule=yy=>{doc.setDrawColor(...grid);doc.setLineWidth(.3);doc.line(L,yy,R,yy);};
 
-  // Header — minimalist professional layout
-  doc.setFillColor(...blue);doc.roundedRect(L,y,18,18,1.5,1.5,'F');
-  doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(18);txt('R',19,y+13);
+  // Header: closely follows the selected minimalist reference
+  doc.setFillColor(...blue);doc.roundedRect(L,y,18,18,1.2,1.2,'F');
+  doc.setFillColor(...cyan);doc.triangle(L+5,y+5,L+13,y+5,L+5,y+13,'F');
+  doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(17);txt('R',L+9,y+13,{align:'center'});
   doc.setTextColor(...dark);doc.setFontSize(19);txt('RITAM ENTERPRISE',34,y+8);
-  doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(...muted);
+  doc.setFont('helvetica','normal');doc.setFontSize(7.2);doc.setTextColor(...muted);
   txt('CEMENT | TMT | SAND | BRICKS | BUILDING MATERIALS',34,y+13);
-  if(shop.address) txt(String(shop.address),34,y+18);
-  if(shop.phone) txt('Phone: '+String(shop.phone),34,y+22);
+  if(shop.address) txt(String(shop.address),34,y+19);
+  if(shop.phone) txt('Phone: '+String(shop.phone),34,y+23);
   doc.setTextColor(...dark);doc.setFont('helvetica','bold');doc.setFontSize(12);txt('SALE INVOICE',R,y+7,{align:'right'});
   doc.setFont('helvetica','normal');doc.setFontSize(7.8);doc.setTextColor(...muted);
-  txt('Invoice No.   :   '+String(b.bill_number),R,y+12,{align:'right'});
-  txt('Invoice Date  :   '+new Date(b.bill_date).toLocaleDateString('en-IN'),R,y+17,{align:'right'});
-  txt('Payment       :   '+(due>0?'Credit / Due':'Paid'),R,y+22,{align:'right'});
-  y+=30;rule(y);y+=8;
+  txt('Invoice No.    :   '+String(b.bill_number),R,y+13,{align:'right'});
+  txt('Invoice Date   :   '+new Date(b.bill_date).toLocaleDateString('en-IN'),R,y+18,{align:'right'});
+  txt('Payment Mode   :   '+(due>0?'Credit / Due':'Paid'),R,y+23,{align:'right'});
+  y=38;rule(y);y+=9;
 
-  // Customer / delivery
+  // Customer block
   doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(...muted);
   txt('BILL TO',L,y);txt('DELIVERY AT (IF DIFFERENT)',112,y);
   doc.setFont('helvetica','bold');doc.setFontSize(10);doc.setTextColor(...dark);
   txt(String(c?.name||'Walk-in Customer'),L,y+7);
   doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(...muted);
-  if(c?.phone) txt(String(c.phone),L,y+13);
-  if(c?.address) txt(String(c.address),L,y+19,{maxWidth:85});
+  if(c?.address) txt(String(c.address),L,y+13,{maxWidth:82});
+  if(c?.phone) txt(String(c.phone),L,y+19);
+  doc.setDrawColor(...grid);doc.setLineWidth(.3);doc.line(105,y-3,105,y+23);
   txt('—',112,y+7);txt('—',112,y+13);txt('—',112,y+19);
-  y+=28;rule(y);y+=6;
+  y+=30;rule(y);y+=6;
 
-  // Items table
-  const x=[L,25,112,137,166,R];
-  const row=7;
-  doc.setFillColor(...soft);doc.rect(L,y,R-L,row,'F');doc.setDrawColor(...line);doc.rect(L,y,R-L,row);
-  doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(...dark);
-  txt('SL.',14,y+4.7,{align:'center'});txt('PARTICULARS',28,y+4.7);txt('QTY',124,y+4.7,{align:'right'});txt('UNIT',150,y+4.7,{align:'right'});txt('RATE (Rs.)',180,y+4.7,{align:'right'});txt('AMOUNT (Rs.)',197,y+4.7,{align:'right'});
+  // Items
+  const row=8;
+  doc.setFillColor(...soft);doc.setDrawColor(...grid);doc.rect(L,y,W,row,'FD');
+  doc.setFont('helvetica','bold');doc.setFontSize(7.7);doc.setTextColor(...dark);
+  txt('SL.',15,y+5.2,{align:'center'});txt('PARTICULARS',28,y+5.2);txt('QTY',123,y+5.2,{align:'right'});txt('UNIT',149,y+5.2,{align:'right'});txt('RATE (Rs.)',177,y+5.2,{align:'right'});txt('AMOUNT (Rs.)',197,y+5.2,{align:'right'});
   y+=row;doc.setFont('helvetica','normal');doc.setFontSize(8);
   items.forEach((i,idx)=>{
-    const lines=doc.splitTextToSize(String(i.product_name||''),82);
-    const h=Math.max(row,lines.length*4+3);
-    if(y+h>270){doc.addPage();y=15;}
-    doc.setDrawColor(...line);doc.rect(L,y,R-L,h);
-    doc.setTextColor(...dark);txt(String(idx+1),14,y+4.7,{align:'center'});
-    lines.forEach((ln,n)=>txt(ln,28,y+4.7+n*4));
-    txt(String(i.quantity),124,y+4.7,{align:'right'});txt(String(i.unit||''),150,y+4.7,{align:'right'});
-    txt(moneyPlain(i.rate),180,y+4.7,{align:'right'});txt(moneyPlain(i.amount),197,y+4.7,{align:'right'});
+    const lines=doc.splitTextToSize(String(i.product_name||''),84);
+    const h=Math.max(row,lines.length*4+4);
+    doc.setDrawColor(...grid);doc.rect(L,y,W,h);
+    doc.setTextColor(...dark);txt(String(idx+1),15,y+5.2,{align:'center'});
+    lines.forEach((ln,n)=>txt(ln,28,y+5.2+n*4));
+    txt(String(i.quantity),123,y+5.2,{align:'right'});txt(String(i.unit||''),149,y+5.2,{align:'right'});
+    txt(moneyPlain(i.rate),177,y+5.2,{align:'right'});txt(moneyPlain(i.amount),197,y+5.2,{align:'right'});
     y+=h;
   });
 
-  // Totals / amount in words
+  // Amount in words + totals
   y+=6;
-  const splitX=115;
-  doc.setDrawColor(...line);doc.line(splitX,y,splitX,y+47);
+  const bottom=y+45;
+  doc.setDrawColor(...grid);doc.line(115,y,115,bottom);
   doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(...dark);txt('Amount in Words',L,y+7);
   doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(...muted);
-  txt('Rupees '+numberToWordsIndian(Number(b.grand_total||0))+' Only',L,y+14,{maxWidth:90});
+  txt('Rupees '+numberToWordsIndian(Number(b.grand_total||0))+' Only',L,y+14,{maxWidth:92});
+  const ty=y+5;
+  txt('Subtotal',122,ty+3);txt(moneyPlain(b.subtotal),R-3,ty+3,{align:'right'});
+  txt('Discount (-)',122,ty+11);txt(moneyPlain(b.discount),R-3,ty+11,{align:'right'});
+  doc.setFillColor(...soft);doc.rect(118,ty+15,82,11,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(10);txt('Grand Total (Rs.)',122,ty+22);txt(moneyPlain(b.grand_total),R-3,ty+22,{align:'right'});
+  doc.setFont('helvetica','normal');doc.setFontSize(8);txt('Amount Received',122,ty+31);txt(moneyPlain(paid),R-3,ty+31,{align:'right'});
+  doc.setFillColor(...soft);doc.rect(118,ty+35,82,11,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(9.5);txt('Balance Due',122,ty+42);txt(moneyPlain(due),R-3,ty+42,{align:'right'});
+  y=bottom+8;rule(y);y+=7;
 
-  const ty=y+6;doc.setFontSize(8);
-  txt('Subtotal',120,ty);txt(moneyPlain(b.subtotal),R-3,ty,{align:'right'});
-  txt('Discount (-)',120,ty+7);txt(moneyPlain(b.discount),R-3,ty+7,{align:'right'});
-  doc.setFillColor(...soft);doc.rect(118,ty+11,82,10,'F');
-  doc.setFont('helvetica','bold');doc.setFontSize(10);txt('Grand Total (Rs.)',122,ty+18);txt(moneyPlain(b.grand_total),R-3,ty+18,{align:'right'});
-  doc.setFont('helvetica','normal');doc.setFontSize(8);txt('Amount Received',120,ty+27);txt(moneyPlain(paid),R-3,ty+27,{align:'right'});
-  doc.setFillColor(...soft);doc.rect(118,ty+31,82,10,'F');doc.setFont('helvetica','bold');doc.setFontSize(9);txt('Balance Due',122,ty+38);txt(moneyPlain(due),R-3,ty+38,{align:'right'});
-  y+=54;rule(y);y+=7;
-
+  // Footer sections
   doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(...muted);txt('TERMS & CONDITIONS',L,y);txt('REMARKS',115,y);
   doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(...dark);
   txt('1. Goods once sold will not be taken back or exchanged.',L,y+6);
   txt('2. Payment to be made as per agreement.',L,y+11);
   txt('3. Subject to Guwahati jurisdiction only.',L,y+16);
-  txt('4. This is a non-GST invoice.',L,y+21);
-  txt('—',115,y+6);
-  y+=33;rule(y);y+=15;
-  doc.setFontSize(7.5);doc.setTextColor(...muted);txt('Customer Signature',L+30,y,{align:'center'});txt('Authorised Signatory',R-30,y,{align:'center'});
-  doc.setFont('helvetica','bold');doc.setTextColor(...dark);txt('RITAM ENTERPRISE',R-30,y+6,{align:'center'});
+  txt('4. This is a non-GST invoice.',L,y+21);txt('—',115,y+6);
+  y+=32;rule(y);y+=12;
+  doc.setFontSize(7.5);doc.setTextColor(...muted);txt('Customer Signature',L+28,y,{align:'center'});txt('Authorised Signatory',R-28,y,{align:'center'});
+  doc.setFont('helvetica','bold');doc.setTextColor(...dark);txt('RITAM ENTERPRISE',R-28,y+6,{align:'center'});
   doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(...muted);txt('THANK YOU FOR YOUR BUSINESS',C,291,{align:'center'});
   return new File([doc.output('blob')],'Ritam-Enterprise-'+b.bill_number+'.pdf',{type:'application/pdf'});
+}
+function numberToWordsIndian(n){
+  n=Math.floor(Math.abs(Number(n)||0)); if(n===0)return 'Zero';
+  const ones=['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'];
+  const tens=['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
+  const two=x=>x<20?ones[x]:tens[Math.floor(x/10)]+(x%10?' '+ones[x%10]:'');
+  const under1000=x=>(x>=100?ones[Math.floor(x/100)]+' Hundred'+(x%100?' ':''):'')+(x%100?two(x%100):'');
+  let s=''; if(n>=10000000){s+=under1000(Math.floor(n/10000000))+' Crore ';n%=10000000;} if(n>=100000){s+=under1000(Math.floor(n/100000))+' Lakh ';n%=100000;} if(n>=1000){s+=under1000(Math.floor(n/1000))+' Thousand ';n%=1000;} if(n>0)s+=under1000(n); return s.trim();
 }
 function numberToWordsIndian(n){
   n=Math.floor(Math.abs(Number(n)||0));

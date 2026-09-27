@@ -5,7 +5,7 @@
  <linearGradient id="a" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#35d6ff"/><stop offset="1" stop-color="#1769ff"/></linearGradient>
  <filter id="shadow"><feDropShadow dx="0" dy="10" stdDeviation="10" flood-opacity=".28"/></filter>
 </defs>
-<rect width="512" height="512" rx="108" fill="url(#bg)"/>
+<rect width="512" height="512" fill="url(#bg)"/>
 <path d="M0 370L512 75v120L0 490z" fill="#fff" opacity=".035"/>
 <path d="M0 250L512 0v55L0 315z" fill="#4bbcff" opacity=".08"/>
 <g filter="url(#shadow)">

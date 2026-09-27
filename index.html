@@ -162,23 +162,55 @@ async function loadAll(session){
   state.shop=await getShop(session);
   if(!state.shop) throw new Error('Your login is not linked to a shop yet.');
   const id=state.shop.id;
-  const [p,c,b,bi,pm]=await Promise.all([
-    sb.from('products').select('*').eq('shop_id',id).eq('active',true).order('name'),
-    sb.from('customers').select('*').eq('shop_id',id).order('name'),
-    sb.from('bills').select('*').eq('shop_id',id).order('bill_date',{ascending:false}),
-    sb.from('bill_items').select('*').order('created_at',{ascending:true}),
-    sb.from('payments').select('*').eq('shop_id',id).order('payment_date',{ascending:false})
-  ]);
-  for(const r of [p,c,b,bi,pm]) if(r.error) throw r.error;
-  state.products=p.data||[];state.customers=c.data||[];state.bills=b.data||[];state.billItems=(bi.data||[]).filter(x=>state.bills.some(b=>b.id===x.bill_id));state.payments=pm.data||[];
+  const requests=[
+    ['products',sb.from('products').select('*').eq('shop_id',id).eq('active',true).order('name')],
+    ['customers',sb.from('customers').select('*').eq('shop_id',id).order('name')],
+    ['bills',sb.from('bills').select('*').eq('shop_id',id).order('bill_date',{ascending:false})],
+    ['bill items',sb.from('bill_items').select('*').order('created_at',{ascending:true})],
+    ['payments',sb.from('payments').select('*').eq('shop_id',id).order('payment_date',{ascending:false})]
+  ];
+  const results=await Promise.all(requests.map(async ([name,promise])=>{
+    const r=await promise;
+    if(r.error) throw new Error(name+': '+r.error.message);
+    return r.data||[];
+  }));
+  const [products,customers,bills,billItems,payments]=results;
+  state.products=products;state.customers=customers;state.bills=bills;
+  state.billItems=billItems.filter(x=>state.bills.some(b=>b.id===x.bill_id));
+  state.payments=payments;
 }
-async function showApp(){
+async function showApp(session){
   $('auth').classList.add('hidden');
   $('app').classList.remove('hidden');
-  const {data:{session}}=await sb.auth.getSession();
   $('userEmail').textContent=session?.user?.email||'';
   render();
   initTheme();
+}
+async function enterApp(session){
+  if(enteringApp)return enteringApp;
+  enteringApp=(async()=>{
+    try{
+      if(!session?.user) throw new Error('Your session has expired. Please sign in again.');
+      await showApp(session);
+      setAuthMessage('success','');
+      try{
+        await loadAll(session);
+        render();
+      }catch(loadError){
+        console.error('Workspace data load failed:',loadError);
+        const message=loadError?.message||'Could not load your shop data.';
+        $('content').innerHTML=msg('error','Signed in successfully, but workspace data could not be loaded: '+message);
+      }
+    }catch(err){
+      console.error('Sign-in workspace failed:',err);
+      $('auth').classList.remove('hidden');
+      $('app').classList.add('hidden');
+      setAuthMessage('error',err?.message||'Could not open your workspace. Please try again.');
+    }finally{
+      enteringApp=null;
+    }
+  })();
+  return enteringApp;
 }
 function render(){
   const titles={dashboard:['Dashboard','Overview of your shop'],inventory:['Inventory','Products, rates and stock'],customers:['Customers','Customer balances and history'],billing:['Billing','Create non-GST bills'],payments:['Payments','Record collections and receipts'],reports:['Reports','Sales and collection summary']};
@@ -442,24 +474,6 @@ $('quickBill').onclick=()=>{state.page='billing';render();setTimeout(billModal,0
 $('logout').onclick=async()=>{await sb.auth.signOut();location.reload()};
 
 let enteringApp=null;
-async function enterApp(session){
-  if(enteringApp)return enteringApp;
-  enteringApp=(async()=>{
-    try{
-      setAuthMessage('success','Loading your workspace…');
-      if(!session?.user) throw new Error('Your session has expired. Please sign in again.');
-      await loadAll(session);
-      await showApp();
-    }catch(err){
-      console.error('Workspace load failed:',err);
-      setAuthMessage('error',err?.message||'Could not load your shop. Please try again.');
-    }finally{
-      enteringApp=null;
-    }
-  })();
-  return enteringApp;
-}
-
 $('loginForm').onsubmit=async e=>{
   e.preventDefault();
   const email=$('email').value.trim(), password=$('password').value;

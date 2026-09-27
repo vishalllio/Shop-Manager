@@ -89,7 +89,7 @@
     <div class="sub">Shop management • Secure cloud login</div>
     <div id="authMsg"></div>
     <form id="loginForm">
-      <div class="field"><label>Email</label><input id="email" type="email" autocomplete="username webauthn" /></div>
+      <div class="field"><label>Email</label><input id="email" type="email" autocomplete="username" /></div>
       <div class="field"><label>Password</label><input id="password" type="password" autocomplete="current-password" /></div>
       <div class="remember-row">
         <label class="remember-label"><input id="rememberMe" type="checkbox" checked /> <span>Remember me</span></label>
@@ -157,7 +157,9 @@ function modal(html){ $('modalRoot').innerHTML = `<div class="modal-back" id="mo
 function closeModal(){ $('modalRoot').innerHTML=''; }
 
 async function getShop(){
-  const {data:{user}}=await sb.auth.getUser();
+  const {data:{session},error:sessionError}=await sb.auth.getSession();
+  if(sessionError) throw sessionError;
+  const user=session?.user;
   if(!user) return null;
   const {data,error}=await sb.from('shop_members').select('shop_id,role,shops(id,name,address,phone,email,logo_url)').eq('user_id',user.id).limit(1).maybeSingle();
   if(error) throw error;
@@ -177,7 +179,14 @@ async function loadAll(){
   for(const r of [p,c,b,bi,pm]) if(r.error) throw r.error;
   state.products=p.data||[];state.customers=c.data||[];state.bills=b.data||[];state.billItems=(bi.data||[]).filter(x=>state.bills.some(b=>b.id===x.bill_id));state.payments=pm.data||[];
 }
-function showApp(){ $('auth').classList.add('hidden');$('app').classList.remove('hidden');$('userEmail').textContent=sb.auth.getUser().then(r=>r.data.user?.email||'');render(); initTheme(); }
+async function showApp(){
+  $('auth').classList.add('hidden');
+  $('app').classList.remove('hidden');
+  const {data:{session}}=await sb.auth.getSession();
+  $('userEmail').textContent=session?.user?.email||'';
+  render();
+  initTheme();
+}
 function render(){
   const titles={dashboard:['Dashboard','Overview of your shop'],inventory:['Inventory','Products, rates and stock'],customers:['Customers','Customer balances and history'],billing:['Billing','Create non-GST bills'],payments:['Payments','Record collections and receipts'],reports:['Reports','Sales and collection summary']};
   $('pageTitle').textContent=titles[state.page][0];$('pageSub').textContent=titles[state.page][1];
@@ -445,11 +454,11 @@ async function enterApp(){
   enteringApp=(async()=>{
     try{
       setAuthMessage('success','Loading your workspace…');
-      const {data:{user},error:userError}=await sb.auth.getUser();
-      if(userError) throw userError;
-      if(!user) throw new Error('Your session has expired. Please sign in again.');
+      const {data:{session},error:sessionError}=await sb.auth.getSession();
+      if(sessionError) throw sessionError;
+      if(!session?.user) throw new Error('Your session has expired. Please sign in again.');
       await loadAll();
-      showApp();
+      await showApp();
     }catch(err){
       console.error('Workspace load failed:',err);
       setAuthMessage('error',err?.message||'Could not load your shop. Please try again.');
@@ -470,7 +479,7 @@ $('loginForm').onsubmit=async e=>{
   try{
     const {data,error}=await sb.auth.signInWithPassword({email,password});
     if(error) throw error;
-    if(!data?.session) throw new Error('Sign-in did not create a session. Please try again.');
+    if(!data?.session?.user) throw new Error('Sign-in did not create a session. Please try again.');
     await enterApp();
   }catch(err){
     console.error('Sign-in failed:',err);

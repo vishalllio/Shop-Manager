@@ -1,1 +1,23 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="#2563eb"/><path d="M155 105h126c77 0 126 39 126 101 0 45-27 76-69 91l76 110h-82l-65-99h-39v99h-73V105zm73 61v83h48c38 0 58-14 58-42 0-28-20-41-58-41h-48z" fill="#fff"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<defs>
+ <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#1687ff"/><stop offset=".52" stop-color="#0739a7"/><stop offset="1" stop-color="#061542"/></linearGradient>
+ <linearGradient id="r" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff"/><stop offset=".55" stop-color="#eef4ff"/><stop offset="1" stop-color="#b9c8e8"/></linearGradient>
+ <linearGradient id="a" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#35d6ff"/><stop offset="1" stop-color="#1769ff"/></linearGradient>
+ <filter id="shadow"><feDropShadow dx="0" dy="10" stdDeviation="10" flood-opacity=".28"/></filter>
+</defs>
+<rect width="512" height="512" rx="108" fill="url(#bg)"/>
+<path d="M0 370L512 75v120L0 490z" fill="#fff" opacity=".035"/>
+<path d="M0 250L512 0v55L0 315z" fill="#4bbcff" opacity=".08"/>
+<g filter="url(#shadow)">
+ <path d="M151 92h122c70 0 115 34 115 89 0 39-22 67-59 82l69 102h-76l-58-86h-40v86h-73V92zm73 59v70h44c31 0 47-11 47-35s-16-35-47-35h-44z" fill="url(#r)"/>
+ <path d="M151 92l119 126-119 78v-82l55-38-55-57z" fill="url(#a)" opacity=".95"/>
+ <path d="M151 296l57-39 73 104h-74z" fill="#fff"/>
+</g>
+<g transform="translate(172 304)">
+ <path d="M0 42V10h44L70 38V10h20v48H70L44 30v28H0z" fill="#fff"/>
+ <rect x="25" y="67" width="7" height="7" fill="#fff"/><rect x="37" y="67" width="7" height="7" fill="#fff"/>
+ <rect x="25" y="78" width="7" height="7" fill="#fff"/><rect x="37" y="78" width="7" height="7" fill="#fff"/>
+</g>
+<text x="256" y="425" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="52" font-weight="800" letter-spacing="10" fill="#fff">RITAM</text>
+<text x="256" y="458" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="16" font-weight="600" letter-spacing="7" fill="#d8e7ff">ENTERPRISE</text>
+</svg>

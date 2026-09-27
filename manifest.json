@@ -2,7 +2,7 @@
   "name":"Ritam Enterprise",
   "short_name":"Ritam Enterprise",
   "id":"./",
-  "start_url":"./?v=8",
+  "start_url":"./?v=10",
   "scope":"./",
   "display":"standalone",
   "orientation":"any",
@@ -10,7 +10,7 @@
   "theme_color":"#0f172a",
   "description":"Ritam Enterprise shop management",
   "icons":[
-    {"src":"icon.svg?v=8","sizes":"192x192","type":"image/svg+xml","purpose":"any maskable"},
-    {"src":"icon.svg?v=8","sizes":"512x512","type":"image/svg+xml","purpose":"any maskable"}
+    {"src":"icon.svg?v=10","sizes":"192x192","type":"image/svg+xml","purpose":"any maskable"},
+    {"src":"icon.svg?v=10","sizes":"512x512","type":"image/svg+xml","purpose":"any maskable"}
   ]
 }

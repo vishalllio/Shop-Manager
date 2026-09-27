@@ -116,7 +116,7 @@
 
 <div id="modalRoot"></div>
 <script type="module">
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
 
 const SUPABASE_URL = 'https://oofprnqowhgoiojcqkxb.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_fBvNOwvd5snRD2DagSJZtA_MxQPM2MW';

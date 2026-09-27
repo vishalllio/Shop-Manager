@@ -95,8 +95,6 @@
         <label class="remember-label"><input id="rememberMe" type="checkbox" checked /> <span>Remember me</span></label>
       </div>
       <button class="btn accent" style="width:100%" type="submit">Sign in</button>
-      <div class="auth-divider">or</div>
-      <button class="btn secondary passkey-btn" id="passkeyLogin" type="button"><span class="passkey-icon">🔐</span><span>Use Face ID / Fingerprint</span></button>
     </form>
   </div>
 </div>
@@ -132,7 +130,6 @@ const sb = createClient(SUPABASE_URL, SUPABASE_KEY, {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: true,
-    experimental: { passkey: true }
   }
 });
 
@@ -405,27 +402,10 @@ $('logout').onclick=async()=>{await sb.auth.signOut();location.reload()};
 async function enterApp(){
   try{await loadAll();showApp();}catch(err){setAuthMessage('error',err.message);}
 }
-async function setupPasskey(){
-  if(!window.PublicKeyCredential){setAuthMessage('error','Passkeys are not supported in this browser.');return;}
-  setAuthMessage('success','Opening Face ID / fingerprint setup…');
-  const r=await sb.auth.registerPasskey();
-  if(r.error){setAuthMessage('error',r.error.message);return;}
-  setAuthMessage('success','Face ID / fingerprint is now enabled for Ritam Enterprise on this device.');
-}
-async function loginWithPasskey(){
-  if(!window.PublicKeyCredential){setAuthMessage('error','Passkeys are not supported in this browser.');return;}
-  setAuthMessage('success','Waiting for Face ID / fingerprint…');
-  const r=await sb.auth.signInWithPasskey();
-  if(r.error){setAuthMessage('error',r.error.message);return;}
-  await enterApp();
-}
-$('setupPasskey')?.addEventListener('click',setupPasskey);
-$('passkeyLogin').onclick=loginWithPasskey;
-
 $('loginForm').onsubmit=async e=>{
   e.preventDefault();
   const email=$('email').value.trim(), password=$('password').value;
-  if(!email || !password){setAuthMessage('error','Enter your email and password, or use Face ID / fingerprint.');return;}
+  if(!email || !password){setAuthMessage('error','Enter your email and password.');return;}
   setAuthMessage('success','Signing in…');
   const r=await sb.auth.signInWithPassword({email,password});
   if(r.error){setAuthMessage('error',r.error.message);return;}

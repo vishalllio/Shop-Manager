@@ -231,7 +231,12 @@ function bindPage(){
   $('addProduct')?.addEventListener('click',()=>productModal());document.querySelectorAll('.edit-product').forEach(b=>b.addEventListener('click',()=>productModal(state.products.find(p=>p.id===b.dataset.id))));
   $('addCustomer')?.addEventListener('click',()=>customerModal());document.querySelectorAll('.edit-customer').forEach(b=>b.addEventListener('click',()=>customerModal(state.customers.find(c=>c.id===b.dataset.id))));
   $('newBill')?.addEventListener('click',billModal);$('addPayment')?.addEventListener('click',paymentModal);$('exportBills')?.addEventListener('click',exportBills);
-  document.querySelectorAll('.view-bill').forEach(b=>b.addEventListener('click',()=>viewBillModal(state.bills.find(x=>x.id===b.dataset.id))));
+  document.querySelectorAll('.view-bill').forEach(b=>b.addEventListener('click',async e=>{
+    e.preventDefault();
+    const bill=state.bills.find(x=>String(x.id)===String(b.dataset.id));
+    if(!bill){alert('Bill could not be found. Please refresh the page.');return;}
+    try{viewBillModal(bill);}catch(err){console.error(err);alert('Could not open this bill. Please refresh and try again.');}
+  }));
   $('productSearch')?.addEventListener('input',e=>filterRows(e.target.value));$('customerSearch')?.addEventListener('input',e=>filterRows(e.target.value));
 }
 function filterRows(v){const q=v.toLowerCase();document.querySelectorAll('tbody tr, .table tr').forEach((r,i)=>{if(i===0)return;r.style.display=r.textContent.toLowerCase().includes(q)?'':'none'})}
@@ -287,11 +292,12 @@ async function billModal(){
   };
 }
 function viewBillModal(b){
-  if(!b)return;
+  if(!b){throw new Error('Bill not found');}
+  if(!state.shop){throw new Error('Shop data is not loaded');}
   const c=state.customers.find(x=>x.id===b.customer_id);
   const items=state.billItems.filter(x=>x.bill_id===b.id);
   const paid=billPayments(b),due=billOutstanding(b);
-  modal(`<div class="modal-head"><h3>Bill ${esc(b.bill_number)}</h3><div class="no-print"><button class="btn secondary" onclick="window.closeModal()">Close</button></div></div>
+  modal(`<div class="modal-head"><h3>Bill ${esc(b.bill_number)}</h3><div class="no-print"><button class="btn secondary" id="closeViewBill">Close</button></div></div>
   <div id="printBill" style="padding:10px">
     <div style="text-align:center;margin-bottom:18px"><h2 style="margin:0">Ritam Enterprise</h2><div class="muted">${esc(state.shop?.address||'')}</div><div class="muted">${esc(state.shop?.phone||'')}</div></div>
     <div class="grid two"><div><b>Bill:</b> ${esc(b.bill_number)}<br><b>Date:</b> ${new Date(b.bill_date).toLocaleString('en-IN')}</div><div><b>Customer:</b> ${esc(c?.name||'Walk-in')}<br><b>Phone:</b> ${esc(c?.phone||'-')}</div></div>
@@ -299,6 +305,7 @@ function viewBillModal(b){
     <div style="max-width:360px;margin:16px 0 0 auto"><div style="display:flex;justify-content:space-between"><span>Subtotal</span><b>${money(b.subtotal)}</b></div><div style="display:flex;justify-content:space-between"><span>Discount</span><b>${money(b.discount)}</b></div><div style="display:flex;justify-content:space-between;font-size:18px;margin-top:8px"><span>Total</span><b>${money(b.grand_total)}</b></div><div style="display:flex;justify-content:space-between"><span>Paid</span><b>${money(paid)}</b></div><div style="display:flex;justify-content:space-between"><span>Outstanding</span><b>${money(due)}</b></div></div>
   </div>
   <div class="toolbar no-print" style="margin-top:12px"><button class="btn accent" id="whatsappBillBtn">WhatsApp</button><button class="btn secondary" id="sharePdfBtn">Share PDF</button><button class="btn secondary" id="printBillBtn">Print / Save PDF</button></div>`);
+  $('closeViewBill').onclick=closeModal;
   const billText=`Ritam Enterprise\nBill ${b.bill_number}\nCustomer: ${c?.name||'Walk-in'}\nTotal: ${money(b.grand_total)}\nPaid: ${money(paid)}\nOutstanding: ${money(due)}`;
   const customerPhone=String(c?.phone||'').replace(/\D/g,'');
   $('printBillBtn').onclick=()=>window.print();

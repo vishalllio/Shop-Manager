@@ -442,24 +442,53 @@ $('logout').onclick=async()=>{await sb.auth.signOut();location.reload()};
 let enteringApp=null;
 async function enterApp(){
   if(enteringApp)return enteringApp;
-  enteringApp=(async()=>{try{setAuthMessage('success','Loading your workspace…');await loadAll();showApp();}catch(err){console.error(err);setAuthMessage('error','Login succeeded, but the shop data could not be loaded. Please try again.');}finally{enteringApp=null;}})();
+  enteringApp=(async()=>{
+    try{
+      setAuthMessage('success','Loading your workspace…');
+      const {data:{user},error:userError}=await sb.auth.getUser();
+      if(userError) throw userError;
+      if(!user) throw new Error('Your session has expired. Please sign in again.');
+      await loadAll();
+      showApp();
+    }catch(err){
+      console.error('Workspace load failed:',err);
+      setAuthMessage('error',err?.message||'Could not load your shop. Please try again.');
+    }finally{
+      enteringApp=null;
+    }
+  })();
   return enteringApp;
 }
+
 $('loginForm').onsubmit=async e=>{
   e.preventDefault();
   const email=$('email').value.trim(), password=$('password').value;
   if(!email || !password){setAuthMessage('error','Enter your email and password.');return;}
+  const button=e.target.querySelector('button[type="submit"]');
+  if(button) button.disabled=true;
   setAuthMessage('success','Signing in…');
-  const r=await sb.auth.signInWithPassword({email,password});
-  if(r.error){setAuthMessage('error',r.error.message);return;}
-  await enterApp();
+  try{
+    const {data,error}=await sb.auth.signInWithPassword({email,password});
+    if(error) throw error;
+    if(!data?.session) throw new Error('Sign-in did not create a session. Please try again.');
+    await enterApp();
+  }catch(err){
+    console.error('Sign-in failed:',err);
+    setAuthMessage('error',err?.message||'Sign-in failed. Please check your email and password.');
+  }finally{
+    if(button) button.disabled=false;
+  }
 };
 
-sb.auth.onAuthStateChange((_event,session)=>{
-  if(session && $('app').classList.contains('hidden')) enterApp();
-});
 initTheme();
-(async()=>{const {data:{session}}=await sb.auth.getSession();if(session){try{await loadAll();showApp()}catch(e){setAuthMessage('error',e.message)}}})();
+(async()=>{
+  const {data:{session},error}=await sb.auth.getSession();
+  if(error){
+    console.error('Session restore failed:',error);
+    return;
+  }
+  if(session) await enterApp();
+})();
 </script>
 </body>
 </html>

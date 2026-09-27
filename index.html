@@ -7,9 +7,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>Ritam Enterprise</title>
-  <link rel="manifest" href="manifest.json?v=20" />
-  <link rel="icon" type="image/svg+xml" href="icon.svg?v=20" />
-  <link rel="icon" type="image/png" sizes="512x512" href="icon.svg?v=20" />
+  <link rel="manifest" href="manifest.json?v=22" />
+  <link rel="icon" type="image/svg+xml" href="icon.svg?v=22" />
+  <link rel="icon" type="image/png" sizes="512x512" href="icon.svg?v=22" />
   <meta name="apple-mobile-web-app-title" content="Ritam Enterprise" />
   <style>
     :root{--bg:#f6f8fc;--surface:#fff;--card:#fff;--text:#0b1220;--muted:#64748b;--line:#e5eaf2;--primary:#0b1220;--accent:#2563eb;--accent-soft:#eff6ff;--danger:#dc2626;--ok:#16a34a;--shadow:0 10px 35px rgba(15,23,42,.06);--shadow-lg:0 20px 60px rgba(15,23,42,.10);--radius:16px}
@@ -96,7 +96,7 @@
 
 <div id="app" class="app hidden">
   <aside class="side">
-    <div class="brand-wrap"><img class="brand-mark" src="icon.svg?v=20" alt="Ritam Enterprise logo" /><div class="brand-copy"><strong>Ritam Enterprise</strong><span>Business Suite</span></div></div>
+    <div class="brand-wrap"><img class="brand-mark" src="icon.svg?v=22" alt="Ritam Enterprise logo" /><div class="brand-copy"><strong>Ritam Enterprise</strong><span>Business Suite</span></div></div>
     <div class="nav-section">Workspace</div>
     <nav class="nav" id="nav">
       <button data-page="dashboard" class="active"><span class="nav-icon">◉</span><span class="nav-label">Dashboard</span><span class="nav-arrow">›</span></button>
@@ -115,8 +115,9 @@
 </div>
 
 <div id="modalRoot"></div>
-<script type="module">
-const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+const { createClient } = window.supabase;
 
 const SUPABASE_URL = 'https://oofprnqowhgoiojcqkxb.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_fBvNOwvd5snRD2DagSJZtA_MxQPM2MW';

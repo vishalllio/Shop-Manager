@@ -298,9 +298,29 @@ function viewBillModal(b){
     <div class="table-wrap" style="margin-top:16px"><table class="table" style="min-width:0"><tr><th>Item</th><th>Qty</th><th>Rate</th><th>Amount</th></tr>${items.map(i=>`<tr><td>${esc(i.product_name)}</td><td>${i.quantity} ${esc(i.unit)}</td><td>${money(i.rate)}</td><td>${money(i.amount)}</td></tr>`).join('')}</table></div>
     <div style="max-width:360px;margin:16px 0 0 auto"><div style="display:flex;justify-content:space-between"><span>Subtotal</span><b>${money(b.subtotal)}</b></div><div style="display:flex;justify-content:space-between"><span>Discount</span><b>${money(b.discount)}</b></div><div style="display:flex;justify-content:space-between;font-size:18px;margin-top:8px"><span>Total</span><b>${money(b.grand_total)}</b></div><div style="display:flex;justify-content:space-between"><span>Paid</span><b>${money(paid)}</b></div><div style="display:flex;justify-content:space-between"><span>Outstanding</span><b>${money(due)}</b></div></div>
   </div>
-  <div class="toolbar no-print" style="margin-top:12px"><button class="btn accent" id="printBillBtn">Print / Save PDF</button><button class="btn secondary" id="shareBillBtn">Share</button></div>`);
+  <div class="toolbar no-print" style="margin-top:12px"><button class="btn accent" id="whatsappBillBtn">WhatsApp</button><button class="btn secondary" id="sharePdfBtn">Share PDF</button><button class="btn secondary" id="printBillBtn">Print / Save PDF</button></div>`);
+  const billText=`Ritam Enterprise\nBill ${b.bill_number}\nCustomer: ${c?.name||'Walk-in'}\nTotal: ${money(b.grand_total)}\nPaid: ${money(paid)}\nOutstanding: ${money(due)}`;
+  const customerPhone=String(c?.phone||'').replace(/\D/g,'');
   $('printBillBtn').onclick=()=>window.print();
-  $('shareBillBtn').onclick=async()=>{const text=`Ritam Enterprise\nBill ${b.bill_number}\nCustomer: ${c?.name||'Walk-in'}\nTotal: ${money(b.grand_total)}\nPaid: ${money(paid)}\nOutstanding: ${money(due)}`;if(navigator.share){try{await navigator.share({title:'Ritam Enterprise Bill '+b.bill_number,text})}catch(e){}}else{try{await navigator.clipboard.writeText(text);alert('Bill details copied.')}catch(e){alert(text)}}};
+  $('whatsappBillBtn').onclick=()=>{if(customerPhone.length<10){alert('Customer does not have a valid WhatsApp phone number. Add the number in Customers first.');return;}const message=billText+'\n\nThank you for your business.';window.open('https://wa.me/'+(customerPhone.startsWith('91')?customerPhone:'91'+customerPhone)+'?text='+encodeURIComponent(message),'_blank');};
+  $('sharePdfBtn').onclick=async()=>{try{const file=await createBillPdf(b,c,items,paid,due);if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({title:'Ritam Enterprise Bill '+b.bill_number,text:billText,files:[file]});}else{const url=URL.createObjectURL(file);const a=document.createElement('a');a.href=url;a.download='Ritam-Enterprise-'+b.bill_number+'.pdf';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}}catch(e){alert(e?.message||'Could not create/share the PDF. Use Print / Save PDF instead.');}};
+}
+async function createBillPdf(b,c,items,paid,due){
+  const {jsPDF}=await import('https://cdn.jsdelivr.net/npm/jspdf@2.5.1/+esm');
+  const doc=new jsPDF({unit:'mm',format:'a4'});
+  let y=18;
+  const line=(label,value,x1=110,x2=190)=>{doc.setFontSize(10);doc.text(String(label),x1,y);doc.text(String(value),x2,y,{align:'right'});y+=7;};
+  doc.setFontSize(20);doc.setFont(undefined,'bold');doc.text('Ritam Enterprise',105,y,{align:'center'});y+=7;
+  doc.setFontSize(10);doc.setFont(undefined,'normal');doc.text('Non-GST Invoice',105,y,{align:'center'});y+=10;
+  doc.setFontSize(11);doc.setFont(undefined,'bold');doc.text('Bill '+b.bill_number,20,y);doc.setFont(undefined,'normal');doc.text(new Date(b.bill_date).toLocaleString('en-IN'),190,y,{align:'right'});y+=8;
+  doc.text('Customer: '+(c?.name||'Walk-in'),20,y);if(c?.phone)doc.text('Phone: '+c.phone,190,y,{align:'right'});y+=9;
+  doc.line(20,y,190,y);y+=7;
+  doc.setFont(undefined,'bold');doc.text('Item',20,y);doc.text('Qty',115,y,{align:'right'});doc.text('Rate',150,y,{align:'right'});doc.text('Amount',190,y,{align:'right'});y+=6;
+  doc.setFont(undefined,'normal');
+  for(const i of items){if(y>270){doc.addPage();y=18;}doc.text(String(i.product_name||''),20,y,{maxWidth:85});doc.text(String(i.quantity)+' '+String(i.unit||''),115,y,{align:'right'});doc.text(money(i.rate),150,y,{align:'right'});doc.text(money(i.amount),190,y,{align:'right'});y+=7;}
+  y+=3;doc.line(110,y,190,y);y+=7;line('Subtotal',money(b.subtotal));line('Discount',money(b.discount));doc.setFont(undefined,'bold');line('Total',money(b.grand_total));doc.setFont(undefined,'normal');line('Paid',money(paid));line('Outstanding',money(due));
+  y+=8;doc.setFontSize(9);doc.setFont(undefined,'normal');doc.text('Thank you for your business.',105,y,{align:'center'});
+  return new File([doc.output('blob')],'Ritam-Enterprise-'+b.bill_number+'.pdf',{type:'application/pdf'});
 }
 function paymentModal(){
   modal(`<div class="modal-head"><h3>Record payment</h3><button class="btn secondary" onclick="window.closeModal()">Close</button></div>

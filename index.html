@@ -1,171 +1,146 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<title>Ritam Enterprise</title>
-<style>
-:root{--bg:#f5f6f8;--card:#fff;--text:#15171a;--muted:#73777d;--line:#e5e7eb;--accent:#111827;--green:#16824b;--red:#c43b3b}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;color:var(--text)}
-.app{max-width:1100px;margin:auto;padding:18px 18px 90px}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}.brand{font-size:25px;font-weight:800}.sub{color:var(--muted);font-size:13px;margin-top:3px}.actions{display:flex;gap:8px}.btn{border:0;border-radius:12px;padding:11px 14px;font-weight:700;background:#111827;color:white;cursor:pointer}.btn.secondary{background:white;color:#111827;border:1px solid var(--line)}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px}.stat .label{color:var(--muted);font-size:13px}.stat .value{font-size:26px;font-weight:800;margin-top:7px}.green{color:var(--green)}.red{color:var(--red)}
-.tabs{display:flex;gap:7px;overflow:auto;margin:18px 0}.tab{white-space:nowrap;border:1px solid var(--line);background:white;border-radius:999px;padding:9px 14px;font-weight:700}.tab.active{background:#111827;color:white;border-color:#111827}
-.section{display:none}.section.active{display:block}.section-head{display:flex;justify-content:space-between;align-items:center;margin:8px 0 12px}.section-head h2{margin:0;font-size:19px}
-table{width:100%;border-collapse:collapse;background:white;border:1px solid var(--line);border-radius:16px;overflow:hidden}th,td{text-align:left;padding:12px;border-bottom:1px solid var(--line);font-size:14px}th{font-size:12px;color:var(--muted);text-transform:uppercase}tr:last-child td{border-bottom:0}
-.formgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.field label{display:block;font-size:12px;color:var(--muted);font-weight:700;margin-bottom:6px}.field input,.field select{width:100%;padding:12px;border:1px solid var(--line);border-radius:11px;background:white;font-size:15px}
-.sale-items{margin-top:14px}.itemrow{display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:8px;margin-bottom:8px}.itemrow input,.itemrow select{padding:10px;border:1px solid var(--line);border-radius:10px}
-.totalbox{margin-top:15px;background:#111827;color:white;border-radius:16px;padding:16px;display:grid;grid-template-columns:1fr auto;gap:8px}.totalbox .big{font-size:28px;font-weight:800}.empty{padding:35px;text-align:center;color:var(--muted);background:white;border:1px dashed var(--line);border-radius:16px}
-.badge{padding:5px 8px;border-radius:999px;font-size:11px;font-weight:800;background:#eef2f7}.badge.low{background:#fff0f0;color:var(--red)}
-.modal{position:fixed;inset:0;background:#0007;display:none;align-items:flex-end;justify-content:center;padding:12px;z-index:5}.modal.show{display:flex}.sheet{background:white;width:min(680px,100%);max-height:90vh;overflow:auto;border-radius:22px;padding:18px}.sheet h2{margin-top:0}
-.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#111827;color:white;padding:12px 16px;border-radius:12px;display:none;z-index:10}
-@media(max-width:750px){.grid{grid-template-columns:repeat(2,1fr)}.formgrid{grid-template-columns:1fr}.itemrow{grid-template-columns:1fr 90px 100px 100px auto}.itemrow input:first-child{grid-column:1/-1}.app{padding:14px 12px 90px}table{font-size:13px}}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Ritam Enterprise</title>
+  <link rel="manifest" href="manifest.json" />
+  <style>
+    :root{--bg:#f5f7fb;--card:#fff;--text:#0f172a;--muted:#64748b;--line:#e2e8f0;--primary:#0f172a;--accent:#2563eb;--danger:#dc2626;--ok:#16a34a;--shadow:0 8px 30px rgba(15,23,42,.07)}
+    *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text)}button,input,select,textarea{font:inherit}button{cursor:pointer}.hidden{display:none!important}
+    .auth{min-height:100vh;display:grid;place-items:center;padding:24px;background:linear-gradient(135deg,#0f172a,#1e293b)}.auth-card{width:min(430px,100%);background:#fff;border-radius:22px;padding:28px;box-shadow:0 25px 80px rgba(0,0,0,.2)}.brand{font-weight:800;font-size:28px}.sub{color:var(--muted);margin:6px 0 24px}.field{margin:14px 0}.field label{display:block;font-size:13px;font-weight:650;margin-bottom:7px}.field input,.field select,.field textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:11px 12px;background:#fff;outline:none}.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+    .btn{border:0;border-radius:10px;padding:11px 15px;background:var(--primary);color:#fff;font-weight:650}.btn.secondary{background:#eef2f7;color:var(--text)}.btn.accent{background:var(--accent)}.btn.danger{background:var(--danger)}.btn.small{padding:8px 10px;font-size:13px}.btn:disabled{opacity:.55;cursor:not-allowed}
+    .app{min-height:100vh;display:grid;grid-template-columns:250px 1fr}.side{background:#0f172a;color:#cbd5e1;padding:18px;position:sticky;top:0;height:100vh}.side h1{color:#fff;font-size:21px;margin:4px 0 24px}.nav button{display:block;width:100%;text-align:left;background:transparent;color:#cbd5e1;border:0;padding:11px 12px;border-radius:9px;margin:3px 0}.nav button.active,.nav button:hover{background:#1e293b;color:#fff}.side-bottom{position:absolute;bottom:18px;left:18px;right:18px}.main{padding:26px;max-width:1500px;width:100%;margin:auto}.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:22px}.top h2{margin:0}.mobile-menu{display:none}
+    .grid{display:grid;gap:16px}.stats{grid-template-columns:repeat(4,minmax(0,1fr))}.two{grid-template-columns:repeat(2,minmax(0,1fr))}.card{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:18px;box-shadow:var(--shadow)}.stat .label{color:var(--muted);font-size:13px}.stat .value{font-size:25px;font-weight:800;margin-top:7px}.toolbar{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin-bottom:14px}.toolbar input,.toolbar select{border:1px solid var(--line);border-radius:9px;padding:9px 10px;background:#fff}.table-wrap{overflow:auto}.table{width:100%;border-collapse:collapse;min-width:650px}.table th,.table td{text-align:left;padding:11px;border-bottom:1px solid var(--line);font-size:13px;vertical-align:middle}.table th{color:var(--muted);font-weight:650}.badge{display:inline-block;padding:4px 8px;border-radius:999px;background:#eef2ff;color:#3730a3;font-size:12px}.badge.danger{background:#fee2e2;color:#991b1b}.badge.ok{background:#dcfce7;color:#166534}
+    .modal-back{position:fixed;inset:0;background:rgba(15,23,42,.55);display:grid;place-items:center;padding:18px;z-index:20}.modal{background:#fff;width:min(720px,100%);max-height:90vh;overflow:auto;border-radius:16px;padding:20px}.modal-head{display:flex;justify-content:space-between;align-items:center}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.bill-items{border:1px solid var(--line);border-radius:10px;padding:10px}.bill-row{display:grid;grid-template-columns:2fr .8fr 1fr auto;gap:8px;align-items:center;margin-bottom:8px}.bill-row input,.bill-row select{width:100%;padding:9px;border:1px solid var(--line);border-radius:8px}.right{text-align:right}.muted{color:var(--muted)}.empty{padding:30px;text-align:center;color:var(--muted)}.error{color:#b91c1c;background:#fef2f2;border:1px solid #fecaca;padding:10px;border-radius:9px;margin:10px 0}.success{color:#166534;background:#f0fdf4;border:1px solid #bbf7d0;padding:10px;border-radius:9px;margin:10px 0}
+    @media(max-width:900px){.app{grid-template-columns:1fr}.side{height:auto;position:sticky;top:0;z-index:10;padding:12px 14px}.side h1{margin:0;font-size:19px}.nav{display:flex;overflow:auto;gap:5px;margin-top:9px}.nav button{white-space:nowrap;width:auto;margin:0}.side-bottom{display:none}.stats{grid-template-columns:1fr 1fr}.main{padding:16px}.two{grid-template-columns:1fr}.top{margin-bottom:16px}}
+    @media(max-width:560px){.stats{grid-template-columns:1fr 1fr}.form-grid{grid-template-columns:1fr}.bill-row{grid-template-columns:1fr 1fr}.bill-row .wide{grid-column:1/-1}}
+  </style>
 </head>
 <body>
-<div class="app">
-  <div class="top"><div><div class="brand">Shop Manager</div><div class="sub">Inventory • Sales • Customers • Non-GST Bills</div></div><div class="actions"><button class="btn" onclick="openSale()">+ New Sale</button></div></div>
-
-  <div class="grid">
-    <div class="card stat"><div class="label">Today's Sales</div><div class="value" id="todaySales">₹0</div></div>
-    <div class="card stat"><div class="label">Today's Collection</div><div class="value green" id="todayPaid">₹0</div></div>
-    <div class="card stat"><div class="label">Outstanding</div><div class="value red" id="outstanding">₹0</div></div>
-    <div class="card stat"><div class="label">Low Stock</div><div class="value" id="lowStock">0</div></div>
+<div id="auth" class="auth">
+  <div class="auth-card">
+    <div class="brand">Ritam Enterprise</div>
+    <div class="sub">Shop management • Secure cloud login</div>
+    <div id="authMsg"></div>
+    <form id="loginForm">
+      <div class="field"><label>Email</label><input id="email" type="email" required autocomplete="email" /></div>
+      <div class="field"><label>Password</label><input id="password" type="password" required autocomplete="current-password" /></div>
+      <button class="btn accent" style="width:100%" type="submit">Sign in</button>
+    </form>
   </div>
-
-  <div class="tabs">
-    <button class="tab active" data-tab="dashboard">Dashboard</button>
-    <button class="tab" data-tab="inventory">Inventory</button>
-    <button class="tab" data-tab="customers">Customers</button>
-    <button class="tab" data-tab="bills">Bills</button>
-  </div>
-
-  <section id="dashboard" class="section active">
-    <div class="section-head"><h2>Recent Sales</h2><button class="btn secondary" onclick="openSale()">Create Bill</button></div>
-    <div id="recentSales"></div>
-  </section>
-
-  <section id="inventory" class="section">
-    <div class="section-head"><h2>Inventory</h2><button class="btn" onclick="openInventory()">+ Add Stock</button></div>
-    <div id="inventoryTable"></div>
-  </section>
-
-  <section id="customers" class="section">
-    <div class="section-head"><h2>Customers</h2><button class="btn" onclick="openCustomer()">+ Customer</button></div>
-    <div id="customerTable"></div>
-  </section>
-
-  <section id="bills" class="section">
-    <div class="section-head"><h2>Bills</h2></div>
-    <div id="billTable"></div>
-  </section>
 </div>
 
-<div class="modal" id="modal"><div class="sheet" id="sheet"></div></div>
-<div class="toast" id="toast"></div>
+<div id="app" class="app hidden">
+  <aside class="side">
+    <h1>Ritam Enterprise</h1>
+    <nav class="nav" id="nav">
+      <button data-page="dashboard" class="active">Dashboard</button>
+      <button data-page="inventory">Inventory</button>
+      <button data-page="customers">Customers</button>
+      <button data-page="billing">Billing</button>
+      <button data-page="payments">Payments</button>
+      <button data-page="reports">Reports</button>
+    </nav>
+    <div class="side-bottom"><div class="muted" id="userEmail" style="font-size:12px;margin-bottom:9px"></div><button class="btn secondary" id="logout" style="width:100%">Sign out</button></div>
+  </aside>
+  <main class="main">
+    <div class="top"><div><h2 id="pageTitle">Dashboard</h2><div class="muted" id="pageSub">Overview of your shop</div></div><button class="btn accent" id="quickBill">+ New Bill</button></div>
+    <div id="content"></div>
+  </main>
+</div>
 
-<script>
-const KEY='shop_manager_v1';
-let db=JSON.parse(localStorage.getItem(KEY)||'null')||{
- products:[
-  {id:1,name:'Cement',unit:'bag',stock:500,rate:420,min:30},
-  {id:2,name:'TMT',unit:'kg',stock:1000,rate:65,min:100},
-  {id:3,name:'Sand',unit:'truck',stock:10,rate:5000,min:2},
-  {id:4,name:'Bricks',unit:'piece',stock:5000,rate:9,min:500},
-  {id:5,name:'Chips',unit:'truck',stock:8,rate:4500,min:2}
- ],customers:[{id:1,name:'Walk-in Customer',phone:'',address:''}],sales:[]
-};
-function save(){localStorage.setItem(KEY,JSON.stringify(db));render()}
-function money(n){return '₹'+Number(n||0).toLocaleString('en-IN',{maximumFractionDigits:2})}
-function dateStr(d=new Date()){return d.toLocaleDateString('en-IN')}
-function toast(s){let t=document.getElementById('toast');t.textContent=s;t.style.display='block';setTimeout(()=>t.style.display='none',1800)}
-document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.section').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(b.dataset.tab).classList.add('active')});
+<div id="modalRoot"></div>
+<script type="module">
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+const SUPABASE_URL = 'https://oofprnqowhgoiojcqkxb.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_fBvNOwvd5snRD2DagSJZtA_MxQPM2MW';
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const $ = id => document.getElementById(id);
+const state = { page:'dashboard', shop:null, products:[], customers:[], bills:[], payments:[], loading:false };
+const money = n => new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:2}).format(Number(n||0));
+const esc = s => String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+
+function msg(type,text){ return `<div class="${type==='error'?'error':'success'}">${esc(text)}</div>`; }
+function setAuthMessage(type,text){ $('authMsg').innerHTML = text ? msg(type,text) : ''; }
+function modal(html){ $('modalRoot').innerHTML = `<div class="modal-back" id="modalBack"><div class="modal">${html}</div></div>`; $('modalBack').addEventListener('click',e=>{if(e.target.id==='modalBack')closeModal()}); }
+function closeModal(){ $('modalRoot').innerHTML=''; }
+
+async function getShop(){
+  const {data:{user}}=await sb.auth.getUser();
+  if(!user) return null;
+  const {data,error}=await sb.from('shop_members').select('shop_id,role,shops(id,name,address,phone,email,logo_url)').eq('user_id',user.id).limit(1).maybeSingle();
+  if(error) throw error;
+  return data ? {id:data.shop_id,role:data.role,...data.shops} : null;
+}
+async function loadAll(){
+  state.shop=await getShop();
+  if(!state.shop) throw new Error('Your login is not linked to a shop yet.');
+  const id=state.shop.id;
+  const [p,c,b,pm]=await Promise.all([
+    sb.from('products').select('*').eq('shop_id',id).eq('active',true).order('name'),
+    sb.from('customers').select('*').eq('shop_id',id).order('name'),
+    sb.from('bills').select('*').eq('shop_id',id).order('bill_date',{ascending:false}),
+    sb.from('payments').select('*').eq('shop_id',id).order('payment_date',{ascending:false})
+  ]);
+  for(const r of [p,c,b,pm]) if(r.error) throw r.error;
+  state.products=p.data||[];state.customers=c.data||[];state.bills=b.data||[];state.payments=pm.data||[];
+}
+function showApp(){ $('auth').classList.add('hidden');$('app').classList.remove('hidden');$('userEmail').textContent=sb.auth.getUser().then(r=>r.data.user?.email||'');render(); }
 function render(){
- let today=new Date().toDateString(), ts=db.sales.filter(s=>new Date(s.date).toDateString()==today);
- document.getElementById('todaySales').textContent=money(ts.reduce((a,s)=>a+s.total,0));
- document.getElementById('todayPaid').textContent=money(ts.reduce((a,s)=>a+s.paid,0));
- document.getElementById('outstanding').textContent=money(db.sales.reduce((a,s)=>a+s.balance,0));
- document.getElementById('lowStock').textContent=db.products.filter(p=>p.stock<=p.min).length;
- renderRecent(); renderInventory(); renderCustomers(); renderBills();
+  const titles={dashboard:['Dashboard','Overview of your shop'],inventory:['Inventory','Products, rates and stock'],customers:['Customers','Customer balances and history'],billing:['Billing','Create non-GST bills'],payments:['Payments','Record collections and receipts'],reports:['Reports','Sales and collection summary']};
+  $('pageTitle').textContent=titles[state.page][0];$('pageSub').textContent=titles[state.page][1];
+  document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===state.page));
+  const views={dashboard:dashboardView,inventory:inventoryView,customers:customersView,billing:billingView,payments:paymentsView,reports:reportsView};
+  $('content').innerHTML=views[state.page]();bindPage();
 }
-function renderRecent(){
- let rows=db.sales.slice().reverse().slice(0,8);
- document.getElementById('recentSales').innerHTML=rows.length?`<table><tr><th>Bill</th><th>Customer</th><th>Date</th><th>Total</th><th>Balance</th></tr>${rows.map(s=>`<tr><td>${s.no}</td><td>${s.customer}</td><td>${dateStr(new Date(s.date))}</td><td>${money(s.total)}</td><td class="${s.balance?'red':'green'}">${money(s.balance)}</td></tr>`).join('')}</table>`:'<div class="empty">No sales yet. Create your first bill.</div>';
+function dashboardView(){
+  const today=new Date().toISOString().slice(0,10);const bills=state.bills.filter(b=>String(b.bill_date).slice(0,10)===today);const sales=bills.reduce((s,b)=>s+Number(b.grand_total),0);const paid=bills.reduce((s,b)=>s+Number(b.paid_amount),0);const outstanding=state.bills.reduce((s,b)=>s+Number(b.outstanding_amount),0);const low=state.products.filter(p=>Number(p.stock)<=Number(p.low_stock_limit));
+  return `<div class="grid stats"><div class="card stat"><div class="label">Today's sales</div><div class="value">${money(sales)}</div></div><div class="card stat"><div class="label">Today's collection</div><div class="value">${money(paid)}</div></div><div class="card stat"><div class="label">Outstanding</div><div class="value">${money(outstanding)}</div></div><div class="card stat"><div class="label">Today's bills</div><div class="value">${bills.length}</div></div></div><div class="grid two" style="margin-top:16px"><div class="card"><h3>Low stock</h3>${low.length?`<div class="table-wrap"><table class="table"><tr><th>Product</th><th>Stock</th><th>Limit</th></tr>${low.slice(0,10).map(p=>`<tr><td>${esc(p.name)}</td><td><span class="badge danger">${p.stock} ${esc(p.unit)}</span></td><td>${p.low_stock_limit}</td></tr>`).join('')}</table></div>`:'<div class="empty">No low-stock items.</div>'}</div><div class="card"><h3>Recent bills</h3>${state.bills.length?`<div class="table-wrap"><table class="table"><tr><th>Bill</th><th>Total</th><th>Paid</th></tr>${state.bills.slice(0,8).map(b=>`<tr><td>${esc(b.bill_number)}</td><td>${money(b.grand_total)}</td><td>${money(b.paid_amount)}</td></tr>`).join('')}</table></div>`:'<div class="empty">No bills yet.</div>'}</div></div>`;
 }
-function renderInventory(){
- document.getElementById('inventoryTable').innerHTML=`<table><tr><th>Material</th><th>Stock</th><th>Rate</th><th>Status</th></tr>${db.products.map(p=>`<tr><td><b>${p.name}</b><div class="sub">per ${p.unit}</div></td><td>${p.stock}</td><td>${money(p.rate)}</td><td>${p.stock<=p.min?'<span class="badge low">LOW STOCK</span>':'<span class="badge">OK</span>'}</td></tr>`).join('')}</table>`;
-}
-function renderCustomers(){
- let rows=db.customers.map(c=>{let ss=db.sales.filter(s=>s.customerId==c.id);return {...c,total:ss.reduce((a,s)=>a+s.total,0),bal:ss.reduce((a,s)=>a+s.balance,0)}})
- document.getElementById('customerTable').innerHTML=`<table><tr><th>Customer</th><th>Phone</th><th>Purchases</th><th>Outstanding</th></tr>${rows.map(c=>`<tr><td><b>${c.name}</b></td><td>${c.phone||'—'}</td><td>${money(c.total)}</td><td class="${c.bal?'red':'green'}">${money(c.bal)}</td></tr>`).join('')}</table>`;
-}
-function renderBills(){
- let rows=db.sales.slice().reverse();
- document.getElementById('billTable').innerHTML=rows.length?`<table><tr><th>Bill</th><th>Customer</th><th>Total</th><th>Status</th><th></th></tr>${rows.map(s=>`<tr><td>${s.no}</td><td>${s.customer}</td><td>${money(s.total)}</td><td>${s.balance?'Credit':'Paid'}</td><td><button class="btn secondary" onclick="showBill(${s.id})">View</button></td></tr>`).join('')}</table>`:'<div class="empty">No bills generated.</div>';
-}
-function closeModal(){document.getElementById('modal').classList.remove('show')}
-document.getElementById('modal').onclick=e=>{if(e.target.id==='modal')closeModal()}
+function inventoryView(){return `<div class="card"><div class="toolbar"><button class="btn accent" id="addProduct">+ Add product</button><input id="productSearch" placeholder="Search products" /><span class="muted">${state.products.length} active products</span></div><div class="table-wrap"><table class="table"><tr><th>Product</th><th>Category</th><th>Unit</th><th>Purchase</th><th>Selling</th><th>Stock</th><th></th></tr>${state.products.map(p=>`<tr><td>${esc(p.name)}</td><td>${esc(p.category||'-')}</td><td>${esc(p.unit)}</td><td>${money(p.purchase_rate)}</td><td>${money(p.selling_rate)}</td><td>${Number(p.stock)<=Number(p.low_stock_limit)?`<span class="badge danger">${p.stock}</span>`:`<span class="badge ok">${p.stock}</span>`} ${esc(p.unit)}</td><td><button class="btn small secondary edit-product" data-id="${p.id}">Edit</button></td></tr>`).join('')||'<tr><td colspan="7" class="empty">No products yet.</td></tr>'}</table></div></div>`}
+function customersView(){return `<div class="card"><div class="toolbar"><button class="btn accent" id="addCustomer">+ Add customer</button><input id="customerSearch" placeholder="Search customers" /></div><div class="table-wrap"><table class="table"><tr><th>Name</th><th>Phone</th><th>Opening</th><th>Current outstanding</th><th></th></tr>${state.customers.map(c=>{const billDue=state.bills.filter(b=>b.customer_id===c.id).reduce((s,b)=>s+Number(b.outstanding_amount),0);const pays=state.payments.filter(p=>p.customer_id===c.id).reduce((s,p)=>s+Number(p.amount),0);const due=Number(c.opening_balance)+billDue-pays;return `<tr><td>${esc(c.name)}</td><td>${esc(c.phone||'-')}</td><td>${money(c.opening_balance)}</td><td>${money(Math.max(0,due))}</td><td><button class="btn small secondary edit-customer" data-id="${c.id}">Edit</button></td></tr>`}).join('')||'<tr><td colspan="5" class="empty">No customers yet.</td></tr>'}</table></div></div>`}
+function billingView(){return `<div class="card"><div class="toolbar"><button class="btn accent" id="newBill">+ Create bill</button><span class="muted">Non-GST billing</span></div><div class="table-wrap"><table class="table"><tr><th>Bill</th><th>Date</th><th>Customer</th><th>Total</th><th>Paid</th><th>Outstanding</th></tr>${state.bills.map(b=>{const c=state.customers.find(x=>x.id===b.customer_id);return `<tr><td>${esc(b.bill_number)}</td><td>${new Date(b.bill_date).toLocaleString('en-IN')}</td><td>${esc(c?.name||'Walk-in')}</td><td>${money(b.grand_total)}</td><td>${money(b.paid_amount)}</td><td>${money(b.outstanding_amount)}</td></tr>`}).join('')||'<tr><td colspan="6" class="empty">No bills yet.</td></tr>'}</table></div></div>`}
+function paymentsView(){return `<div class="card"><div class="toolbar"><button class="btn accent" id="addPayment">+ Record payment</button></div><div class="table-wrap"><table class="table"><tr><th>Date</th><th>Customer</th><th>Amount</th><th>Method</th><th>Reference</th></tr>${state.payments.map(p=>{const c=state.customers.find(x=>x.id===p.customer_id);return `<tr><td>${new Date(p.payment_date).toLocaleString('en-IN')}</td><td>${esc(c?.name||'—')}</td><td>${money(p.amount)}</td><td>${esc(p.payment_method)}</td><td>${esc(p.reference||'—')}</td></tr>`}).join('')||'<tr><td colspan="5" class="empty">No payments yet.</td></tr>'}</table></div></div>`}
+function reportsView(){const sales=state.bills.reduce((s,b)=>s+Number(b.grand_total),0),paid=state.bills.reduce((s,b)=>s+Number(b.paid_amount),0),due=state.bills.reduce((s,b)=>s+Number(b.outstanding_amount),0),inv=state.products.reduce((s,p)=>s+Number(p.stock)*Number(p.purchase_rate),0);return `<div class="grid stats"><div class="card stat"><div class="label">Total sales</div><div class="value">${money(sales)}</div></div><div class="card stat"><div class="label">Bill collections</div><div class="value">${money(paid)}</div></div><div class="card stat"><div class="label">Bill outstanding</div><div class="value">${money(due)}</div></div><div class="card stat"><div class="label">Inventory value</div><div class="value">${money(inv)}</div></div></div><div class="card" style="margin-top:16px"><h3>Export</h3><p class="muted">Download a CSV snapshot of bills.</p><button class="btn" id="exportBills">Export bills CSV</button></div>`}
 
-function openCustomer(){
- document.getElementById('sheet').innerHTML=`<h2>Add Customer</h2><div class="formgrid">
- <div class="field"><label>Name</label><input id="cname" placeholder="Customer name"></div>
- <div class="field"><label>Phone</label><input id="cphone" inputmode="tel" placeholder="Phone number"></div>
- <div class="field"><label>Address</label><input id="caddr" placeholder="Optional"></div></div>
- <div style="margin-top:16px;display:flex;gap:8px"><button class="btn" onclick="addCustomer()">Save</button><button class="btn secondary" onclick="closeModal()">Cancel</button></div>`;
- document.getElementById('modal').classList.add('show')
+function bindPage(){
+  $('addProduct')?.addEventListener('click',()=>productModal());document.querySelectorAll('.edit-product').forEach(b=>b.addEventListener('click',()=>productModal(state.products.find(p=>p.id===b.dataset.id))));
+  $('addCustomer')?.addEventListener('click',()=>customerModal());document.querySelectorAll('.edit-customer').forEach(b=>b.addEventListener('click',()=>customerModal(state.customers.find(c=>c.id===b.dataset.id))));
+  $('newBill')?.addEventListener('click',billModal);$('addPayment')?.addEventListener('click',paymentModal);$('exportBills')?.addEventListener('click',exportBills);
+  $('productSearch')?.addEventListener('input',e=>filterRows(e.target.value));$('customerSearch')?.addEventListener('input',e=>filterRows(e.target.value));
 }
-function addCustomer(){let n=document.getElementById('cname').value.trim();if(!n)return toast('Enter customer name');db.customers.push({id:Date.now(),name:n,phone:document.getElementById('cphone').value,address:document.getElementById('caddr').value});save();closeModal();toast('Customer added')}
+function filterRows(v){const q=v.toLowerCase();document.querySelectorAll('tbody tr, .table tr').forEach((r,i)=>{if(i===0)return;r.style.display=r.textContent.toLowerCase().includes(q)?'':'none'})}
+function productModal(p={}){modal(`<div class="modal-head"><h3>${p.id?'Edit':'Add'} product</h3><button class="btn secondary" onclick="window.closeModal()">Close</button></div><form id="productForm"><div class="form-grid"><div class="field"><label>Name</label><input name="name" required value="${esc(p.name)}"></div><div class="field"><label>Category</label><input name="category" value="${esc(p.category)}"></div><div class="field"><label>Unit</label><input name="unit" required value="${esc(p.unit||'pcs')}"></div><div class="field"><label>Low stock limit</label><input name="low" type="number" step="0.001" value="${p.low_stock_limit??0}"></div><div class="field"><label>Purchase rate</label><input name="purchase" type="number" step="0.01" value="${p.purchase_rate??0}"></div><div class="field"><label>Selling rate</label><input name="selling" type="number" step="0.01" value="${p.selling_rate??0}"></div><div class="field"><label>Current stock</label><input name="stock" type="number" step="0.001" value="${p.stock??0}"></div></div><button class="btn accent" type="submit">Save product</button><div id="formMsg"></div></form>`);$('productForm').addEventListener('submit',async e=>{e.preventDefault();const f=new FormData(e.target);const row={shop_id:state.shop.id,name:f.get('name'),category:f.get('category')||null,unit:f.get('unit'),purchase_rate:Number(f.get('purchase')||0),selling_rate:Number(f.get('selling')||0),stock:Number(f.get('stock')||0),low_stock_limit:Number(f.get('low')||0),active:true};const r=p.id?await sb.from('products').update(row).eq('id',p.id):await sb.from('products').insert(row);if(r.error){$('formMsg').innerHTML=msg('error',r.error.message);return}closeModal();await loadAll();render();});}
+function customerModal(c={}){modal(`<div class="modal-head"><h3>${c.id?'Edit':'Add'} customer</h3><button class="btn secondary" onclick="window.closeModal()">Close</button></div><form id="customerForm"><div class="form-grid"><div class="field"><label>Name</label><input name="name" required value="${esc(c.name)}"></div><div class="field"><label>Phone</label><input name="phone" value="${esc(c.phone)}"></div><div class="field"><label>Address</label><input name="address" value="${esc(c.address)}"></div><div class="field"><label>Opening outstanding</label><input name="opening" type="number" step="0.01" value="${c.opening_balance??0}"></div></div><button class="btn accent" type="submit">Save customer</button><div id="formMsg"></div></form>`);$('customerForm').addEventListener('submit',async e=>{e.preventDefault();const f=new FormData(e.target);const row={shop_id:state.shop.id,name:f.get('name'),phone:f.get('phone')||null,address:f.get('address')||null,opening_balance:Number(f.get('opening')||0)};const r=c.id?await sb.from('customers').update(row).eq('id',c.id):await sb.from('customers').insert(row);if(r.error){$('formMsg').innerHTML=msg('error',r.error.message);return}closeModal();await loadAll();render();});}
+async function billModal(){
+  const products=state.products;modal(`<div class="modal-head"><h3>Create non-GST bill</h3><button class="btn secondary" id="closeBill">Close</button></div><form id="billForm"><div class="form-grid"><div class="field"><label>Customer</label><select name="customer"><option value="">Walk-in customer</option>${state.customers.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('')}</select></div><div class="field"><label>Paid amount</label><input name="paid" type="number" step="0.01" value="0"></div></div><div class="field"><label>Discount</label><input name="discount" type="number" step="0.01" value="0"></div><div class="bill-items" id="billItems"><div class="bill-row"><select class="wide product"><option value="">Select product</option>${products.map(p=>`<option value="${p.id}">${esc(p.name)} (${p.stock} ${esc(p.unit)})</option>`).join('')}</select><input class="qty" type="number" step="0.001" min="0.001" placeholder="Qty"><input class="rate" type="number" step="0.01" placeholder="Rate"><button type="button" class="btn danger small remove">×</button></div></div><button type="button" class="btn secondary small" id="addLine">+ Add item</button><div class="right" style="margin:16px 0;font-size:18px;font-weight:800">Total: <span id="billTotal">₹0.00</span></div><button class="btn accent" type="submit">Save bill</button><div id="billMsg"></div></form>`);
+  $('closeBill').onclick=closeModal;const items=$('billItems');const recalc=()=>{let t=0;items.querySelectorAll('.bill-row').forEach(r=>{t+=Number(r.querySelector('.qty').value||0)*Number(r.querySelector('.rate').value||0)});t-=Number(document.querySelector('[name=discount]').value||0);$('billTotal').textContent=money(Math.max(0,t));};
+  items.querySelector('.rate').addEventListener('input',recalc);items.querySelector('.qty').addEventListener('input',recalc);document.querySelector('[name=discount]').addEventListener('input',recalc);items.querySelector('.product').addEventListener('change',e=>{const p=products.find(x=>x.id===e.target.value);if(p)e.target.closest('.bill-row').querySelector('.rate').value=p.selling_rate;recalc()});items.querySelector('.remove').onclick=e=>{if(items.querySelectorAll('.bill-row').length>1)e.target.closest('.bill-row').remove();recalc()};$('addLine').onclick=()=>{const r=items.querySelector('.bill-row').cloneNode(true);r.querySelectorAll('input').forEach(i=>i.value='');r.querySelector('select').value='';r.querySelector('.remove').onclick=e=>{if(items.querySelectorAll('.bill-row').length>1)e.target.closest('.bill-row').remove();recalc()};r.querySelector('.product').onchange=e=>{const p=products.find(x=>x.id===e.target.value);if(p)r.querySelector('.rate').value=p.selling_rate;recalc()};r.querySelector('.qty').oninput=recalc;r.querySelector('.rate').oninput=recalc;items.appendChild(r)};
+  $('billForm').onsubmit=async e=>{e.preventDefault();const rows=[...items.querySelectorAll('.bill-row')].map(r=>{const product=products.find(p=>p.id===r.querySelector('.product').value);return product?{product,qty:Number(r.querySelector('.qty').value||0),rate:Number(r.querySelector('.rate').value||0)}:null}).filter(Boolean);if(!rows.length||rows.some(x=>x.qty<=0)){ $('billMsg').innerHTML=msg('error','Add at least one valid product and quantity.');return}for(const x of rows){if(x.qty>x.product.stock){$('billMsg').innerHTML=msg('error',`${x.product.name} has only ${x.product.stock} ${x.product.unit} in stock.`);return}}
+    const subtotal=rows.reduce((s,x)=>s+x.qty*x.rate,0),discount=Number(new FormData(e.target).get('discount')||0),total=Math.max(0,subtotal-discount),paid=Math.max(0,Math.min(total,Number(new FormData(e.target).get('paid')||0))),due=total-paid;const customerId=new FormData(e.target).get('customer')||null;
+    const prefix='RE-';const num=state.bills.length+1;const billNumber=prefix+String(num).padStart(5,'0');const {data:{user}}=await sb.auth.getUser();
+    const br=await sb.from('bills').insert({shop_id:state.shop.id,customer_id:customerId,bill_number:billNumber,subtotal,discount,grand_total:total,paid_amount:paid,outstanding_amount:due,payment_method:paid?'cash':null,created_by:user.id}).select().single();if(br.error){$('billMsg').innerHTML=msg('error',br.error.message);return}
+    const bill=br.data;const ir=await sb.from('bill_items').insert(rows.map(x=>({bill_id:bill.id,product_id:x.product.id,product_name:x.product.name,quantity:x.qty,unit:x.product.unit,rate:x.rate,amount:x.qty*x.rate})));if(ir.error){$('billMsg').innerHTML=msg('error',ir.error.message);return}
+    for(const x of rows){const nr=await sb.from('products').update({stock:Number(x.product.stock)-x.qty}).eq('id',x.product.id);if(nr.error){$('billMsg').innerHTML=msg('error',nr.error.message);return}await sb.from('stock_movements').insert({shop_id:state.shop.id,product_id:x.product.id,movement_type:'sale',quantity:-x.qty,reference_id:bill.id,created_by:user.id});}
+    if(paid>0 && customerId) await sb.from('payments').insert({shop_id:state.shop.id,customer_id:customerId,bill_id:bill.id,amount:paid,payment_method:'cash',created_by:user.id});
+    closeModal();await loadAll();render();
+  };
+}
+function paymentModal(){modal(`<div class="modal-head"><h3>Record payment</h3><button class="btn secondary" onclick="window.closeModal()">Close</button></div><form id="paymentForm"><div class="form-grid"><div class="field"><label>Customer</label><select name="customer" required><option value="">Select customer</option>${state.customers.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('')}</select></div><div class="field"><label>Amount</label><input name="amount" type="number" step="0.01" min="0.01" required></div><div class="field"><label>Method</label><select name="method"><option>cash</option><option>UPI</option><option>bank transfer</option><option>cheque</option><option>other</option></select></div><div class="field"><label>Reference</label><input name="ref"></div></div><button class="btn accent" type="submit">Save payment</button><div id="formMsg"></div></form>`);$('paymentForm').onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target);const {data:{user}}=await sb.auth.getUser();const r=await sb.from('payments').insert({shop_id:state.shop.id,customer_id:f.get('customer'),amount:Number(f.get('amount')),payment_method:f.get('method'),reference:f.get('ref')||null,created_by:user.id});if(r.error){$('formMsg').innerHTML=msg('error',r.error.message);return}closeModal();await loadAll();render()}}
+function exportBills(){const rows=[['Bill','Date','Customer','Subtotal','Discount','Total','Paid','Outstanding'],...state.bills.map(b=>[b.bill_number,b.bill_date,state.customers.find(c=>c.id===b.customer_id)?.name||'Walk-in',b.subtotal,b.discount,b.grand_total,b.paid_amount,b.outstanding_amount])];const csv=rows.map(r=>r.map(x=>'"'+String(x??'').replaceAll('"','""')+'"').join(',')).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='ritam-enterprise-bills.csv';a.click();URL.revokeObjectURL(a.href)}
 
-function openInventory(){
- document.getElementById('sheet').innerHTML=`<h2>Add / Update Stock</h2><div class="formgrid">
- <div class="field"><label>Material</label><input id="pname" placeholder="e.g. Cement"></div>
- <div class="field"><label>Unit</label><input id="punit" placeholder="bag / kg / truck"></div>
- <div class="field"><label>Quantity to add</label><input id="pqty" type="number" min="0"></div>
- <div class="field"><label>Selling rate per unit</label><input id="prate" type="number" min="0"></div>
- <div class="field"><label>Low-stock threshold</label><input id="pmin" type="number" min="0" value="10"></div></div>
- <div style="margin-top:16px;display:flex;gap:8px"><button class="btn" onclick="addStock()">Save Stock</button><button class="btn secondary" onclick="closeModal()">Cancel</button></div>`;
- document.getElementById('modal').classList.add('show')
-}
-function addStock(){let n=document.getElementById('pname').value.trim(),u=document.getElementById('punit').value.trim(),q=+document.getElementById('pqty').value||0,r=+document.getElementById('prate').value||0,m=+document.getElementById('pmin').value||0;if(!n||!u)return toast('Enter material and unit');let p=db.products.find(x=>x.name.toLowerCase()==n.toLowerCase());if(p){p.stock+=q;p.rate=r||p.rate;p.min=m}else db.products.push({id:Date.now(),name:n,unit:u,stock:q,rate:r,min:m});save();closeModal();toast('Inventory updated')}
+window.closeModal=closeModal;
+$('nav').addEventListener('click',e=>{const b=e.target.closest('button[data-page]');if(!b)return;state.page=b.dataset.page;render()});$('quickBill').onclick=()=>{state.page='billing';render();setTimeout(billModal,0)};$('logout').onclick=async()=>{await sb.auth.signOut();location.reload()};
+$('loginForm').onsubmit=async e=>{e.preventDefault();setAuthMessage('success','Signing in…');const r=await sb.auth.signInWithPassword({email:$('email').value,password:$('password').value});if(r.error){setAuthMessage('error',r.error.message);return}try{await loadAll();showApp()}catch(err){setAuthMessage('error',err.message)}};
 
-function openSale(){
- let opts=db.customers.map(c=>`<option value="${c.id}">${c.name}${c.phone?' — '+c.phone:''}</option>`).join('');
- document.getElementById('sheet').innerHTML=`<h2>New Non-GST Bill</h2>
- <div class="formgrid"><div class="field"><label>Customer</label><select id="saleCustomer">${opts}</select></div><div class="field"><label>Bill date</label><input id="saleDate" type="date" value="${new Date().toISOString().slice(0,10)}"></div></div>
- <div class="sale-items" id="saleItems"></div>
- <button class="btn secondary" onclick="addSaleRow()">+ Add Material</button>
- <div class="formgrid" style="margin-top:14px"><div class="field"><label>Discount</label><input id="discount" type="number" value="0" oninput="calcSale()"></div><div class="field"><label>Amount Paid</label><input id="paid" type="number" value="0" oninput="calcSale()"></div></div>
- <div class="totalbox"><div>Total<br><span class="big" id="saleTotal">₹0</span></div><div style="text-align:right">Balance<br><span class="big" id="saleBalance">₹0</span></div></div>
- <div style="margin-top:14px;display:flex;gap:8px"><button class="btn" onclick="saveSale()">Generate Bill</button><button class="btn secondary" onclick="closeModal()">Cancel</button></div>`;
- document.getElementById('modal').classList.add('show');addSaleRow()
-}
-function addSaleRow(){
- let wrap=document.getElementById('saleItems'), id='r'+Date.now()+Math.random();
- let opts=db.products.map(p=>`<option value="${p.id}">${p.name} (stock ${p.stock} ${p.unit})</option>`).join('');
- let d=document.createElement('div');d.className='itemrow';d.id=id;d.innerHTML=`<select class="prod" onchange="calcSale()">${opts}</select><input class="qty" type="number" min="0" step="0.01" value="1" oninput="calcSale()"><input class="rate" type="number" min="0" value="${db.products[0]?.rate||0}" oninput="calcSale()"><input class="amt" readonly value="0"><button class="btn secondary" onclick="this.parentElement.remove();calcSale()">×</button>`;wrap.appendChild(d);calcSale()
-}
-function calcSale(){
- let subtotal=0;document.querySelectorAll('.itemrow').forEach(r=>{let p=db.products.find(x=>x.id==r.querySelector('.prod').value);let qty=+r.querySelector('.qty').value||0;r.querySelector('.rate').value=r.querySelector('.rate').value||p.rate;let a=qty*(+r.querySelector('.rate').value||0);r.querySelector('.amt').value=a.toFixed(2);subtotal+=a});let dis=+document.getElementById('discount')?.value||0,total=Math.max(0,subtotal-dis),paid=+document.getElementById('paid')?.value||0;document.getElementById('saleTotal').textContent=money(total);document.getElementById('saleBalance').textContent=money(Math.max(0,total-paid))
-}
-function saveSale(){
- let customerId=+document.getElementById('saleCustomer').value, c=db.customers.find(x=>x.id==customerId),items=[],ok=true;
- document.querySelectorAll('.itemrow').forEach(r=>{let pid=+r.querySelector('.prod').value,p=db.products.find(x=>x.id==pid),qty=+r.querySelector('.qty').value||0,rate=+r.querySelector('.rate').value||0;if(qty<=0||qty>p.stock){ok=false;toast(`Insufficient ${p.name} stock`);return}items.push({productId:pid,name:p.name,unit:p.unit,qty,rate,amount:qty*rate})});
- if(!ok||!items.length)return;
- let subtotal=items.reduce((a,i)=>a+i.amount,0),discount=+document.getElementById('discount').value||0,total=Math.max(0,subtotal-discount),paid=Math.min(total,+document.getElementById('paid').value||0);
- items.forEach(i=>db.products.find(p=>p.id==i.productId).stock-=i.qty);
- let sale={id:Date.now(),no:'BILL-'+String(db.sales.length+1).padStart(5,'0'),date:new Date(document.getElementById('saleDate').value+'T12:00:00').toISOString(),customerId,customer:c.name,items,subtotal,discount,total,paid,balance:total-paid};
- db.sales.push(sale);save();closeModal();toast(`Bill ${sale.no} created`);showBill(sale.id)
-}
-function showBill(id){
- let s=db.sales.find(x=>x.id==id);if(!s)return;
- document.getElementById('sheet').innerHTML=`<div style="text-align:center"><h2 style="margin-bottom:3px">NON-GST BILL</h2><div class="sub">Shop Manager • ${s.no} • ${dateStr(new Date(s.date))}</div></div><hr style="border:0;border-top:1px solid var(--line);margin:16px 0"><b>Customer:</b> ${s.customer}<table style="margin-top:12px"><tr><th>Item</th><th>Qty</th><th>Rate</th><th>Amount</th></tr>${s.items.map(i=>`<tr><td>${i.name}</td><td>${i.qty} ${i.unit}</td><td>${money(i.rate)}</td><td>${money(i.amount)}</td></tr>`).join('')}</table><div style="margin-top:14px;text-align:right"><div>Subtotal: ${money(s.subtotal)}</div><div>Discount: ${money(s.discount)}</div><h2>Total: ${money(s.total)}</h2><div class="green">Paid: ${money(s.paid)}</div><div class="red">Balance: ${money(s.balance)}</div></div><div style="margin-top:18px;display:flex;gap:8px"><button class="btn" onclick="shareBill(${s.id})">Share Bill</button><button class="btn secondary" onclick="window.print()">Print / PDF</button><button class="btn secondary" onclick="closeModal()">Close</button></div>`;
- document.getElementById('modal').classList.add('show')
-}
-async function shareBill(id){
- let s=db.sales.find(x=>x.id==id);let text=`NON-GST BILL ${s.no}\nCustomer: ${s.customer}\nTotal: ${money(s.total)}\nPaid: ${money(s.paid)}\nBalance: ${money(s.balance)}\n\n${s.items.map(i=>`${i.name}: ${i.qty} ${i.unit} × ${money(i.rate)} = ${money(i.amount)}`).join('\n')}`;
- if(navigator.share) await navigator.share({title:s.no,text}); else {await navigator.clipboard?.writeText(text);toast('Bill copied to clipboard')}
-}
-render();
+sb.auth.onAuthStateChange(async (_event,session)=>{if(session && $('app').classList.contains('hidden')){try{await loadAll();showApp()}catch(e){setAuthMessage('error',e.message)}}});
+(async()=>{const {data:{session}}=await sb.auth.getSession();if(session){try{await loadAll();showApp()}catch(e){setAuthMessage('error',e.message)}}})();
 </script>
 </body>
 </html>

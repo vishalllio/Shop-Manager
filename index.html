@@ -271,7 +271,7 @@ function customersView(){
           <tr><th>Customer</th><th>Phone</th><th>Pending bills</th><th>Total pending</th><th></th></tr>
           ${pendingCustomers.map(c=>`<tr class="pending-customer-row" data-name="${esc((c.name||'')+' '+(c.phone||''))}">
             <td><b>${esc(c.name)}</b></td><td>${esc(c.phone||'-')}</td><td>${c.pendingBills.length}</td><td><b>${money(c.pendingDue)}</b></td>
-            <td><button class="btn small accent pending-history" data-id="${c.id}">View pending</button></td>
+            <td><div style="display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap"><button class="btn small accent pending-history" data-id="${c.id}">View pending</button><button class="btn small secondary pending-reminder" data-id="${c.id}">WhatsApp reminder</button></div></td>
           </tr>`).join('')||'<tr><td colspan="5" class="empty">No pending bills.</td></tr>'}
         </table>
       </div>
@@ -280,6 +280,21 @@ function customersView(){
       <div class="toolbar"><button class="btn accent" id="addCustomer">+ Add customer</button><input id="customerSearch" placeholder="Search customers" /></div>
       <div class="table-wrap"><table class="table"><tr><th>Name</th><th>Phone</th><th>Opening</th><th>Current outstanding</th><th></th></tr>${state.customers.map(c=>`<tr><td>${esc(c.name)}</td><td>${esc(c.phone||'-')}</td><td>${money(c.opening_balance)}</td><td>${money(customerBalance(c))}</td><td><button class="btn small secondary edit-customer" data-id="${c.id}">Edit</button></td></tr>`).join('')||'<tr><td colspan="5" class="empty">No customers yet.</td></tr>'}</table></div>
     </div>`
+}
+function openWhatsAppReminder(customer){
+  const phone=String(customer?.phone||'').replace(/\D/g,'');
+  if(phone.length<10){alert('Customer does not have a valid phone number. Add the number in Customers first.');return;}
+  const bills=state.bills.filter(b=>b.customer_id===customer.id && billOutstanding(b)>0).sort((a,b)=>new Date(a.bill_date)-new Date(b.bill_date));
+  const totalDue=bills.reduce((s,b)=>s+billOutstanding(b),0);
+  const lines=bills.map(b=>`• ${new Date(b.bill_date).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})} — ${b.bill_number} — Pending ${money(billOutstanding(b))}`).join('\n');
+  const message=`Hello ${customer.name||'Customer'},\n\nThis is a friendly reminder from Ritam Enterprise regarding your pending payment.\n\nPending bills:\n${lines}\n\nTotal pending: ${money(totalDue)}\n\nKindly clear the pending amount at your convenience. Thank you for your business.\n\nRitam Enterprise`;
+  window.open('https://wa.me/'+(phone.startsWith('91')?phone:'91'+phone)+'?text='+encodeURIComponent(message),'_blank');
+}
+function openWhatsAppBillReminder(customer,bill){
+  const phone=String(customer?.phone||'').replace(/\D/g,'');
+  if(phone.length<10){alert('Customer does not have a valid phone number. Add the number in Customers first.');return;}
+  const message=`Hello ${customer.name||'Customer'},\n\nThis is a friendly reminder from Ritam Enterprise regarding your pending bill.\n\nBill: ${bill.bill_number}\nDate: ${new Date(bill.bill_date).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})}\nBill amount: ${money(bill.grand_total)}\nPaid: ${money(billPayments(bill))}\nPending: ${money(billOutstanding(bill))}\n\nKindly clear the pending amount at your convenience. Thank you for your business.\n\nRitam Enterprise`;
+  window.open('https://wa.me/'+(phone.startsWith('91')?phone:'91'+phone)+'?text='+encodeURIComponent(message),'_blank');
 }
 function pendingCustomerModal(customer){
   const bills=state.bills.filter(b=>b.customer_id===customer.id && billOutstanding(b)>0).sort((a,b)=>new Date(b.bill_date)-new Date(a.bill_date));
@@ -297,7 +312,7 @@ function pendingCustomerModal(customer){
         <td>${money(b.grand_total)}</td>
         <td>${money(billPayments(b))}</td>
         <td><b>${money(billOutstanding(b))}</b></td>
-        <td><button class="btn small secondary pending-view-bill" data-id="${b.id}">View bill</button></td>
+        <td><div style="display:flex;gap:5px;justify-content:flex-end;flex-wrap:wrap"><button class="btn small secondary pending-view-bill" data-id="${b.id}">View bill</button><button class="btn small secondary pending-reminder-bill" data-id="${b.id}">Remind</button></div></td>
       </tr>`).join('')||'<tr><td colspan="6" class="empty">No pending bills.</td></tr>'}
     </table></div>`);
   document.querySelectorAll('.pending-view-bill').forEach(btn=>btn.addEventListener('click',()=>{const b=state.bills.find(x=>x.id===btn.dataset.id);if(b)viewBillModal(b);}));
@@ -310,6 +325,8 @@ function bindPage(){
   $('addProduct')?.addEventListener('click',()=>productModal());document.querySelectorAll('.edit-product').forEach(b=>b.addEventListener('click',()=>productModal(state.products.find(p=>p.id===b.dataset.id))));
   $('addCustomer')?.addEventListener('click',()=>customerModal());document.querySelectorAll('.edit-customer').forEach(b=>b.addEventListener('click',()=>customerModal(state.customers.find(c=>c.id===b.dataset.id))));
   document.querySelectorAll('.pending-history').forEach(b=>b.addEventListener('click',()=>{const c=state.customers.find(x=>x.id===b.dataset.id);if(c)pendingCustomerModal(c);}));
+  document.querySelectorAll('.pending-reminder').forEach(b=>b.addEventListener('click',()=>{const c=state.customers.find(x=>x.id===b.dataset.id);if(c)openWhatsAppReminder(c);}));
+  document.querySelectorAll('.pending-reminder-bill').forEach(b=>b.addEventListener('click',()=>{const bill=state.bills.find(x=>x.id===b.dataset.id);const customer=bill&&state.customers.find(x=>x.id===bill.customer_id);if(bill&&customer)openWhatsAppBillReminder(customer,bill);}));
   $('pendingCustomerSearch')?.addEventListener('input',e=>{const q=e.target.value.toLowerCase().trim();document.querySelectorAll('.pending-customer-row').forEach(r=>{r.style.display=r.dataset.name.toLowerCase().includes(q)?'':'none';});});
   $('newBill')?.addEventListener('click',billModal);$('addPayment')?.addEventListener('click',paymentModal);$('exportBills')?.addEventListener('click',exportBills);
   document.querySelectorAll('.view-bill').forEach(b=>b.addEventListener('click',async e=>{

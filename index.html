@@ -103,7 +103,7 @@
       <button data-page="inventory"><span class="nav-icon">▦</span><span class="nav-label">Inventory</span><span class="nav-arrow">›</span></button>
       <button data-page="customers"><span class="nav-icon">♙</span><span class="nav-label">Customers</span><span class="nav-arrow">›</span></button>
       <button data-page="billing"><span class="nav-icon">▤</span><span class="nav-label">Billing</span><span class="nav-arrow">›</span></button>
-      <button data-page="payments"><span class="nav-icon">₹</span><span class="nav-label">Payments</span><span class="nav-arrow">›</span></button>
+      <button data-page="payments"><span class="nav-icon">₹</span><span class="nav-label">Payments</span><span class="nav-arrow">›</span></button><button data-page="staff"><span class="nav-icon">♟</span><span class="nav-label">Staff</span><span class="nav-arrow">›</span></button>
       <button data-page="reports"><span class="nav-icon">▥</span><span class="nav-label">Reports</span><span class="nav-arrow">›</span></button>
     </nav>
     <div class="side-bottom"><div class="user-chip"><div class="user-avatar">RE</div><div class="user-info"><strong>Ritam Enterprise</strong><span id="userEmail"></span></div></div><button class="btn secondary" id="logout" style="width:100%">Sign out</button></div>
@@ -130,7 +130,7 @@ const sb = createClient(SUPABASE_URL, SUPABASE_KEY, {
 });
 
 const $ = id => document.getElementById(id);
-const state = { page:'dashboard', shop:null, products:[], customers:[], bills:[], billItems:[], payments:[], loading:false };
+const state = { page:'dashboard', shop:null, products:[], customers:[], bills:[], billItems:[], payments:[], staff:[], attendance:[], salaryPayments:[], loading:false };
 function applyTheme(theme){
   document.body.classList.toggle('dark',theme==='dark');
   localStorage.setItem('ritam-theme',theme);
@@ -160,6 +160,7 @@ async function getShop(session){
   return data ? {id:data.shop_id,role:data.role,...data.shops} : null;
 }
 async function loadAll(session){
+  if(!session){ const s=await sb.auth.getSession(); session=s.data.session; }
   state.shop=await getShop(session);
   if(!state.shop) throw new Error('Your login is not linked to a shop yet.');
   const id=state.shop.id;
@@ -168,17 +169,20 @@ async function loadAll(session){
     ['customers',sb.from('customers').select('*').eq('shop_id',id).order('name')],
     ['bills',sb.from('bills').select('*').eq('shop_id',id).order('bill_date',{ascending:false})],
     ['bill items',sb.from('bill_items').select('*').order('created_at',{ascending:true})],
-    ['payments',sb.from('payments').select('*').eq('shop_id',id).order('payment_date',{ascending:false})]
+    ['payments',sb.from('payments').select('*').eq('shop_id',id).order('payment_date',{ascending:false})],
+    ['staff',sb.from('staff').select('*').eq('shop_id',id).eq('active',true).order('name')],
+    ['attendance',sb.from('staff_attendance').select('*').eq('shop_id',id).order('attendance_date',{ascending:false})],
+    ['salary payments',sb.from('staff_salary_payments').select('*').eq('shop_id',id).order('salary_month',{ascending:false})]
   ];
   const results=await Promise.all(requests.map(async ([name,promise])=>{
     const r=await promise;
     if(r.error) throw new Error(name+': '+r.error.message);
     return r.data||[];
   }));
-  const [products,customers,bills,billItems,payments]=results;
+  const [products,customers,bills,billItems,payments,staff,attendance,salaryPayments]=results;
   state.products=products;state.customers=customers;state.bills=bills;
   state.billItems=billItems.filter(x=>state.bills.some(b=>b.id===x.bill_id));
-  state.payments=payments;
+  state.payments=payments;state.staff=staff;state.attendance=attendance;state.salaryPayments=salaryPayments;
 }
 async function showApp(session){
   $('auth').classList.add('hidden');
@@ -214,10 +218,10 @@ async function enterApp(session){
   return enteringApp;
 }
 function render(){
-  const titles={dashboard:['Dashboard','Overview of your shop'],inventory:['Inventory','Products, rates and stock'],customers:['Customers','Customer balances and history'],billing:['Billing','Create non-GST bills'],payments:['Payments','Record collections and receipts'],reports:['Reports','Sales and collection summary']};
+  const titles={dashboard:['Dashboard','Overview of your shop'],inventory:['Inventory','Products, rates and stock'],customers:['Customers','Customer balances and history'],billing:['Billing','Create non-GST bills'],payments:['Payments','Record collections and receipts'],reports:['Reports','Sales and collection summary'],staff:['Staff','Attendance, salaries and staff records']};
   $('pageTitle').textContent=titles[state.page][0];$('pageSub').textContent=titles[state.page][1];
   document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===state.page));
-  const views={dashboard:dashboardView,inventory:inventoryView,customers:customersView,billing:billingView,payments:paymentsView,reports:reportsView};
+  const views={dashboard:dashboardView,inventory:inventoryView,customers:customersView,billing:billingView,payments:paymentsView,reports:reportsView,staff:staffView};
   $('content').innerHTML=views[state.page]();bindPage();
 }
 function dashboardView(){
@@ -319,6 +323,49 @@ function pendingCustomerModal(customer){
 }
 function billingView(){return `<div class="card"><div class="toolbar"><button class="btn accent" id="newBill">+ Create bill</button><span class="muted">Non-GST billing</span></div><div class="table-wrap"><table class="table"><tr><th>Bill</th><th>Date</th><th>Customer</th><th>Total</th><th>Paid</th><th>Outstanding</th><th></th></tr>${state.bills.map(b=>{const c=state.customers.find(x=>x.id===b.customer_id);return `<tr><td>${esc(b.bill_number)}</td><td>${new Date(b.bill_date).toLocaleString('en-IN')}</td><td>${esc(c?.name||'Walk-in')}</td><td>${money(b.grand_total)}</td><td>${money(billPayments(b))}</td><td>${money(billOutstanding(b))}</td><td><button class="btn small secondary view-bill" data-id="${b.id}">View</button></td></tr>`}).join('')||'<tr><td colspan="7" class="empty">No bills yet.</td></tr>'}</table></div></div>`}
 function paymentsView(){return `<div class="card"><div class="toolbar"><button class="btn accent" id="addPayment">+ Record payment</button></div><div class="table-wrap"><table class="table"><tr><th>Date</th><th>Customer</th><th>Amount</th><th>Method</th><th>Reference</th></tr>${state.payments.map(p=>{const c=state.customers.find(x=>x.id===p.customer_id);return `<tr><td>${new Date(p.payment_date).toLocaleString('en-IN')}</td><td>${esc(c?.name||'—')}</td><td>${money(p.amount)}</td><td>${esc(p.payment_method)}</td><td>${esc(p.reference||'—')}</td></tr>`}).join('')||'<tr><td colspan="5" class="empty">No payments yet.</td></tr>'}</table></div></div>`}
+function staffView(){
+  const month=new Date().toISOString().slice(0,7);
+  const active=state.staff;
+  const totalSalary=active.reduce((s,x)=>s+Number(x.salary||0),0);
+  const paidThisMonth=state.salaryPayments.filter(x=>String(x.salary_month).slice(0,7)===month).reduce((s,x)=>s+Number(x.paid_amount||0),0);
+  return `<div class="grid stats">
+    <div class="card stat"><div class="label">ACTIVE STAFF</div><div class="value">${active.length}</div></div>
+    <div class="card stat"><div class="label">MONTHLY SALARY</div><div class="value">${money(totalSalary)}</div></div>
+    <div class="card stat"><div class="label">PAID THIS MONTH</div><div class="value">${money(paidThisMonth)}</div></div>
+    <div class="card stat"><div class="label">SALARY PENDING</div><div class="value">${money(Math.max(0,totalSalary-paidThisMonth))}</div></div>
+  </div>
+  <div class="card" style="margin-top:18px"><div class="toolbar"><button class="btn accent" id="addStaff">+ Add staff</button><button class="btn secondary" id="attendanceBtn">Attendance</button><button class="btn secondary" id="salaryBtn">Salary records</button><input id="staffSearch" placeholder="Search staff..." /></div>
+  <div class="table-wrap"><table class="table"><tr><th>Name</th><th>Role</th><th>Phone</th><th>Monthly salary</th><th>This month</th><th></th></tr>
+  ${active.map(s=>{const pay=state.salaryPayments.find(x=>x.staff_id===s.id&&String(x.salary_month).slice(0,7)===month);return `<tr><td><b>${esc(s.name)}</b></td><td>${esc(s.role||'-')}</td><td>${esc(s.phone||'-')}</td><td>${money(s.salary)}</td><td>${money(pay?.paid_amount||0)}</td><td><button class="btn small secondary edit-staff" data-id="${s.id}">Manage</button></td></tr>`}).join('')||'<tr><td colspan="6" class="empty">No staff added yet.</td></tr>'}</table></div></div>`
+}
+function staffModal(s={}){
+ modal(`<div class="modal-head"><h3>${s.id?'Manage':'Add'} staff</h3><button class="btn secondary" onclick="window.closeModal()">Close</button></div>
+ <form id="staffForm"><div class="form-grid">
+ <div class="field"><label>Name</label><input name="name" required value="${esc(s.name)}"></div>
+ <div class="field"><label>Role / designation</label><input name="role" value="${esc(s.role)}"></div>
+ <div class="field"><label>Phone</label><input name="phone" value="${esc(s.phone)}"></div>
+ <div class="field"><label>Joining date</label><input name="join" type="date" value="${s.join_date||''}"></div>
+ <div class="field"><label>Monthly salary</label><input name="salary" type="number" step="0.01" min="0" value="${s.salary||0}"></div>
+ <div class="field"><label>Notes</label><input name="notes" value="${esc(s.notes)}"></div>
+ </div><button class="btn accent" type="submit">Save staff</button><div id="staffMsg"></div></form>`);
+ $('staffForm').onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target);const row={shop_id:state.shop.id,name:f.get('name'),role:f.get('role')||null,phone:f.get('phone')||null,join_date:f.get('join')||null,salary:Number(f.get('salary')||0),notes:f.get('notes')||null,active:true};const q=s.id?await sb.from('staff').update(row).eq('id',s.id):await sb.from('staff').insert(row);if(q.error){$('staffMsg').innerHTML=msg('error',q.error.message);return}closeModal();await loadAll();render()};
+}
+function attendanceModal(){
+ const today=new Date().toISOString().slice(0,10);
+ modal(`<div class="modal-head"><h3>Attendance</h3><button class="btn secondary" onclick="window.closeModal()">Close</button></div>
+ <div class="field"><label>Date</label><input id="attDate" type="date" value="${today}"></div><div id="attRows"></div><button class="btn accent" id="saveAttendance">Save attendance</button><div id="attMsg"></div>`);
+ const renderAtt=()=>{const d=$('attDate').value;const rows=state.staff.map(s=>{const a=state.attendance.find(x=>x.staff_id===s.id&&x.attendance_date===d);return `<div class="list-row"><div class="item-main"><strong>${esc(s.name)}</strong><span>${esc(s.role||'')}</span></div><select class="att-status" data-id="${s.id}" style="padding:8px;border:1px solid var(--line);border-radius:8px"><option value="present" ${(a?.status||'present')==='present'?'selected':''}>Present</option><option value="absent" ${a?.status==='absent'?'selected':''}>Absent</option><option value="half_day" ${a?.status==='half_day'?'selected':''}>Half day</option><option value="leave" ${a?.status==='leave'?'selected':''}>Leave</option></select></div>`}).join('')||'<div class="empty">Add staff first.</div>'; $('attRows').innerHTML=rows};
+ $('attDate').onchange=renderAtt;renderAtt();
+ $('saveAttendance').onclick=async()=>{const d=$('attDate').value;const rows=[...document.querySelectorAll('.att-status')];for(const r of rows){const q=await sb.from('staff_attendance').upsert({shop_id:state.shop.id,staff_id:r.dataset.id,attendance_date:d,status:r.value},{onConflict:'staff_id,attendance_date'});if(q.error){$('attMsg').innerHTML=msg('error',q.error.message);return}}closeModal();await loadAll();render()};
+}
+function salaryModal(){
+ const month=new Date().toISOString().slice(0,7);
+ modal(`<div class="modal-head"><h3>Monthly salary records</h3><button class="btn secondary" onclick="window.closeModal()">Close</button></div>
+ <div class="field"><label>Salary month</label><input id="salaryMonth" type="month" value="${month}"></div><div id="salaryRows"></div>`);
+ const renderSal=()=>{const m=$('salaryMonth').value; $('salaryRows').innerHTML=state.staff.map(s=>{const p=state.salaryPayments.find(x=>x.staff_id===s.id&&String(x.salary_month).slice(0,7)===m);return `<div class="list-row"><div class="item-main"><strong>${esc(s.name)}</strong><span>Salary: ${money(s.salary)}</span></div><div style="display:flex;gap:7px;align-items:center"><input class="salary-paid" data-id="${s.id}" type="number" step="0.01" value="${p?.paid_amount||0}" style="width:110px;padding:8px;border:1px solid var(--line);border-radius:8px"><button class="btn small accent salary-save" data-id="${s.id}">Save</button></div></div>`}).join('')||'<div class="empty">Add staff first.</div>'};
+ $('salaryMonth').onchange=renderSal;renderSal();
+ document.getElementById('salaryRows').onclick=async e=>{const b=e.target.closest('.salary-save');if(!b)return;const m=$('salaryMonth').value+'-01';const s=state.staff.find(x=>x.id===b.dataset.id);const paid=Number(document.querySelector('.salary-paid[data-id="'+b.dataset.id+'"]').value||0);const q=await sb.from('staff_salary_payments').upsert({shop_id:state.shop.id,staff_id:s.id,salary_month:m,base_salary:Number(s.salary||0),paid_amount:paid,payment_date:new Date().toISOString().slice(0,10),payment_method:'cash'},{onConflict:'staff_id,salary_month'});if(q.error)alert(q.error.message);else{await loadAll();salaryModal()}};
+}
 function reportsView(){const sales=state.bills.reduce((s,b)=>s+Number(b.grand_total||0),0),paid=state.payments.reduce((s,p)=>s+Number(p.amount||0),0),due=totalOutstanding(),inv=state.products.reduce((s,p)=>s+Number(p.stock||0)*Number(p.purchase_rate||0),0);return `<div class="grid stats"><div class="card stat"><div class="label">Total sales</div><div class="value">${money(sales)}</div></div><div class="card stat"><div class="label">Total collections</div><div class="value">${money(paid)}</div></div><div class="card stat"><div class="label">Outstanding</div><div class="value">${money(due)}</div></div><div class="card stat"><div class="label">Inventory value</div><div class="value">${money(inv)}</div></div></div><div class="card" style="margin-top:16px"><h3>Export</h3><p class="muted">Download a CSV snapshot of bills.</p><button class="btn" id="exportBills">Export bills CSV</button></div>`}
 
 function bindPage(){
@@ -329,6 +376,7 @@ function bindPage(){
   document.querySelectorAll('.pending-reminder-bill').forEach(b=>b.addEventListener('click',()=>{const bill=state.bills.find(x=>x.id===b.dataset.id);const customer=bill&&state.customers.find(x=>x.id===bill.customer_id);if(bill&&customer)openWhatsAppBillReminder(customer,bill);}));
   $('pendingCustomerSearch')?.addEventListener('input',e=>{const q=e.target.value.toLowerCase().trim();document.querySelectorAll('.pending-customer-row').forEach(r=>{r.style.display=r.dataset.name.toLowerCase().includes(q)?'':'none';});});
   $('newBill')?.addEventListener('click',billModal);$('addPayment')?.addEventListener('click',paymentModal);$('exportBills')?.addEventListener('click',exportBills);
+  $('addStaff')?.addEventListener('click',()=>staffModal());$('attendanceBtn')?.addEventListener('click',attendanceModal);$('salaryBtn')?.addEventListener('click',salaryModal);document.querySelectorAll('.edit-staff').forEach(b=>b.addEventListener('click',()=>staffModal(state.staff.find(s=>s.id===b.dataset.id))));$('staffSearch')?.addEventListener('input',e=>filterRows(e.target.value));
   document.querySelectorAll('.view-bill').forEach(b=>b.addEventListener('click',async e=>{
     e.preventDefault();
     const bill=state.bills.find(x=>String(x.id)===String(b.dataset.id));

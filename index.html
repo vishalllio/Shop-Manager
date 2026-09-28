@@ -254,7 +254,54 @@ function dashboardView(){
     </div>`;
 }
 function inventoryView(){return `<div class="card"><div class="toolbar"><button class="btn accent" id="addProduct">+ Add product</button><input id="productSearch" placeholder="Search products" /><span class="muted">${state.products.length} active products</span></div><div class="table-wrap"><table class="table"><tr><th>Product</th><th>Category</th><th>Unit</th><th>Purchase</th><th>Selling</th><th>Stock</th><th></th></tr>${state.products.map(p=>`<tr><td>${esc(p.name)}</td><td>${esc(p.category||'-')}</td><td>${esc(p.unit)}</td><td>${money(p.purchase_rate)}</td><td>${money(p.selling_rate)}</td><td>${Number(p.stock)<=Number(p.low_stock_limit)?`<span class="badge danger">${p.stock}</span>`:`<span class="badge ok">${p.stock}</span>`} ${esc(p.unit)}</td><td><button class="btn small secondary edit-product" data-id="${p.id}">Edit</button></td></tr>`).join('')||'<tr><td colspan="7" class="empty">No products yet.</td></tr>'}</table></div></div>`}
-function customersView(){return `<div class="card"><div class="toolbar"><button class="btn accent" id="addCustomer">+ Add customer</button><input id="customerSearch" placeholder="Search customers" /></div><div class="table-wrap"><table class="table"><tr><th>Name</th><th>Phone</th><th>Opening</th><th>Current outstanding</th><th></th></tr>${state.customers.map(c=>`<tr><td>${esc(c.name)}</td><td>${esc(c.phone||'-')}</td><td>${money(c.opening_balance)}</td><td>${money(customerBalance(c))}</td><td><button class="btn small secondary edit-customer" data-id="${c.id}">Edit</button></td></tr>`).join('')||'<tr><td colspan="5" class="empty">No customers yet.</td></tr>'}</table></div></div>`}
+function customersView(){
+  const pendingCustomers=state.customers.map(c=>{
+    const bills=state.bills.filter(b=>b.customer_id===c.id && billOutstanding(b)>0);
+    const due=bills.reduce((s,b)=>s+billOutstanding(b),0);
+    return {...c,pendingBills:bills,pendingDue:due};
+  }).filter(c=>c.pendingBills.length>0).sort((a,b)=>b.pendingDue-a.pendingDue);
+  return `
+    <div class="card" style="margin-bottom:16px">
+      <div class="section-head"><div><h3>Pending bills</h3><span>Search a customer to see all unpaid bills</span></div><span id="pendingCustomerCount">${pendingCustomers.length} customer${pendingCustomers.length===1?'':'s'}</span></div>
+      <div class="toolbar">
+        <input id="pendingCustomerSearch" placeholder="Search customer name..." style="flex:1;min-width:220px" />
+      </div>
+      <div class="table-wrap">
+        <table class="table" id="pendingCustomerTable">
+          <tr><th>Customer</th><th>Phone</th><th>Pending bills</th><th>Total pending</th><th></th></tr>
+          ${pendingCustomers.map(c=>`<tr class="pending-customer-row" data-name="${esc((c.name||'')+' '+(c.phone||''))}">
+            <td><b>${esc(c.name)}</b></td><td>${esc(c.phone||'-')}</td><td>${c.pendingBills.length}</td><td><b>${money(c.pendingDue)}</b></td>
+            <td><button class="btn small accent pending-history" data-id="${c.id}">View pending</button></td>
+          </tr>`).join('')||'<tr><td colspan="5" class="empty">No pending bills.</td></tr>'}
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="toolbar"><button class="btn accent" id="addCustomer">+ Add customer</button><input id="customerSearch" placeholder="Search customers" /></div>
+      <div class="table-wrap"><table class="table"><tr><th>Name</th><th>Phone</th><th>Opening</th><th>Current outstanding</th><th></th></tr>${state.customers.map(c=>`<tr><td>${esc(c.name)}</td><td>${esc(c.phone||'-')}</td><td>${money(c.opening_balance)}</td><td>${money(customerBalance(c))}</td><td><button class="btn small secondary edit-customer" data-id="${c.id}">Edit</button></td></tr>`).join('')||'<tr><td colspan="5" class="empty">No customers yet.</td></tr>'}</table></div>
+    </div>`
+}
+function pendingCustomerModal(customer){
+  const bills=state.bills.filter(b=>b.customer_id===customer.id && billOutstanding(b)>0).sort((a,b)=>new Date(b.bill_date)-new Date(a.bill_date));
+  const totalDue=bills.reduce((s,b)=>s+billOutstanding(b),0);
+  modal(`<div class="modal-head"><div><h3 style="margin:0">${esc(customer.name)}</h3><div class="muted">Pending bill history</div></div><button class="btn secondary" onclick="window.closeModal()">Close</button></div>
+    <div class="grid stats" style="margin:18px 0">
+      <div class="card stat"><div class="label">PENDING BILLS</div><div class="value">${bills.length}</div></div>
+      <div class="card stat"><div class="label">TOTAL PENDING</div><div class="value">${money(totalDue)}</div></div>
+    </div>
+    <div class="table-wrap"><table class="table">
+      <tr><th>Date</th><th>Bill No.</th><th>Bill amount</th><th>Paid</th><th>Pending</th><th></th></tr>
+      ${bills.map(b=>`<tr>
+        <td>${new Date(b.bill_date).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})}</td>
+        <td>${esc(b.bill_number)}</td>
+        <td>${money(b.grand_total)}</td>
+        <td>${money(billPayments(b))}</td>
+        <td><b>${money(billOutstanding(b))}</b></td>
+        <td><button class="btn small secondary pending-view-bill" data-id="${b.id}">View bill</button></td>
+      </tr>`).join('')||'<tr><td colspan="6" class="empty">No pending bills.</td></tr>'}
+    </table></div>`);
+  document.querySelectorAll('.pending-view-bill').forEach(btn=>btn.addEventListener('click',()=>{const b=state.bills.find(x=>x.id===btn.dataset.id);if(b)viewBillModal(b);}));
+}
 function billingView(){return `<div class="card"><div class="toolbar"><button class="btn accent" id="newBill">+ Create bill</button><span class="muted">Non-GST billing</span></div><div class="table-wrap"><table class="table"><tr><th>Bill</th><th>Date</th><th>Customer</th><th>Total</th><th>Paid</th><th>Outstanding</th><th></th></tr>${state.bills.map(b=>{const c=state.customers.find(x=>x.id===b.customer_id);return `<tr><td>${esc(b.bill_number)}</td><td>${new Date(b.bill_date).toLocaleString('en-IN')}</td><td>${esc(c?.name||'Walk-in')}</td><td>${money(b.grand_total)}</td><td>${money(billPayments(b))}</td><td>${money(billOutstanding(b))}</td><td><button class="btn small secondary view-bill" data-id="${b.id}">View</button></td></tr>`}).join('')||'<tr><td colspan="7" class="empty">No bills yet.</td></tr>'}</table></div></div>`}
 function paymentsView(){return `<div class="card"><div class="toolbar"><button class="btn accent" id="addPayment">+ Record payment</button></div><div class="table-wrap"><table class="table"><tr><th>Date</th><th>Customer</th><th>Amount</th><th>Method</th><th>Reference</th></tr>${state.payments.map(p=>{const c=state.customers.find(x=>x.id===p.customer_id);return `<tr><td>${new Date(p.payment_date).toLocaleString('en-IN')}</td><td>${esc(c?.name||'—')}</td><td>${money(p.amount)}</td><td>${esc(p.payment_method)}</td><td>${esc(p.reference||'—')}</td></tr>`}).join('')||'<tr><td colspan="5" class="empty">No payments yet.</td></tr>'}</table></div></div>`}
 function reportsView(){const sales=state.bills.reduce((s,b)=>s+Number(b.grand_total||0),0),paid=state.payments.reduce((s,p)=>s+Number(p.amount||0),0),due=totalOutstanding(),inv=state.products.reduce((s,p)=>s+Number(p.stock||0)*Number(p.purchase_rate||0),0);return `<div class="grid stats"><div class="card stat"><div class="label">Total sales</div><div class="value">${money(sales)}</div></div><div class="card stat"><div class="label">Total collections</div><div class="value">${money(paid)}</div></div><div class="card stat"><div class="label">Outstanding</div><div class="value">${money(due)}</div></div><div class="card stat"><div class="label">Inventory value</div><div class="value">${money(inv)}</div></div></div><div class="card" style="margin-top:16px"><h3>Export</h3><p class="muted">Download a CSV snapshot of bills.</p><button class="btn" id="exportBills">Export bills CSV</button></div>`}
@@ -262,6 +309,8 @@ function reportsView(){const sales=state.bills.reduce((s,b)=>s+Number(b.grand_to
 function bindPage(){
   $('addProduct')?.addEventListener('click',()=>productModal());document.querySelectorAll('.edit-product').forEach(b=>b.addEventListener('click',()=>productModal(state.products.find(p=>p.id===b.dataset.id))));
   $('addCustomer')?.addEventListener('click',()=>customerModal());document.querySelectorAll('.edit-customer').forEach(b=>b.addEventListener('click',()=>customerModal(state.customers.find(c=>c.id===b.dataset.id))));
+  document.querySelectorAll('.pending-history').forEach(b=>b.addEventListener('click',()=>{const c=state.customers.find(x=>x.id===b.dataset.id);if(c)pendingCustomerModal(c);}));
+  $('pendingCustomerSearch')?.addEventListener('input',e=>{const q=e.target.value.toLowerCase().trim();document.querySelectorAll('.pending-customer-row').forEach(r=>{r.style.display=r.dataset.name.toLowerCase().includes(q)?'':'none';});});
   $('newBill')?.addEventListener('click',billModal);$('addPayment')?.addEventListener('click',paymentModal);$('exportBills')?.addEventListener('click',exportBills);
   document.querySelectorAll('.view-bill').forEach(b=>b.addEventListener('click',async e=>{
     e.preventDefault();

@@ -479,15 +479,21 @@ async function createBillPdf(b,c,items,paid,due){
 
   // Premium navy header with a simple printable R emblem
   doc.setFillColor(...navy);doc.rect(0,0,210,49,'F');
-  doc.setFillColor(...blue);doc.roundedRect(L,y,25,25,2,2,'F');
-  doc.setTextColor(...white);doc.setFont('helvetica','bold');doc.setFontSize(22);txt('R',L+12.5,y+17,{align:'center'});
-  doc.setDrawColor(...gold);doc.setLineWidth(1);doc.line(L+4,y+20,L+21,y+20);
-  doc.setTextColor(...white);doc.setFont('helvetica','bold');doc.setFontSize(21);txt('RITAM',40,22);
-  doc.setFontSize(16);doc.setTextColor(175,202,232);txt('ENTERPRISE',40,30);
-  doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(...white);
-  txt('BUILDING MATERIALS & HARDWARE GOODS',40,37);
-  doc.setFillColor(...gold);doc.roundedRect(40,40,62,4,1,1,'F');
-  doc.setTextColor(...navy);doc.setFont('helvetica','bold');doc.setFontSize(6.5);txt('CEMENT  |  TMT  |  SAND  |  BRICKS',42,42.8);
+  // Load the actual Ritam Enterprise app logo rather than drawing a substitute lettermark.
+  try {
+    const logoData=await new Promise(resolve=>{
+      const image=new Image();
+      image.onload=()=>{try{const canvas=document.createElement('canvas');canvas.width=512;canvas.height=512;const ctx=canvas.getContext('2d');ctx.drawImage(image,0,0,512,512);resolve(canvas.toDataURL('image/png'));}catch(e){resolve(null);}};
+      image.onerror=()=>resolve(null);
+      image.src=new URL('./icon.svg?v=25',window.location.href).href;
+    });
+    if(logoData) doc.addImage(logoData,'PNG',L,7,36,36);
+  } catch(e) { console.warn('Invoice logo could not be loaded',e); }
+  doc.setTextColor(...white);doc.setFont('helvetica','bold');doc.setFontSize(17);txt('RITAM ENTERPRISE',50,20);
+  doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(235,241,250);
+  txt('BUILDING MATERIALS & HARDWARE GOODS',50,27);
+  txt('CEMENT  |  TMT  |  SAND  |  BRICKS  |  HARDWARE',50,33);
+  if(shop.phone) txt('Phone: '+String(shop.phone),50,40);
   doc.setTextColor(...white);doc.setFont('helvetica','bold');doc.setFontSize(17);txt('INVOICE',R,17,{align:'right'});
   doc.setFont('helvetica','normal');doc.setFontSize(8);txt('CASH / CREDIT BILL',R,23,{align:'right'});
   doc.setFontSize(8.3);txt('Bill No.          :  '+String(b.bill_number),R,31,{align:'right'});

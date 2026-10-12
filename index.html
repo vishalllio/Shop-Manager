@@ -479,21 +479,33 @@ async function createBillPdf(b,c,items,paid,due){
 
   // Premium navy header with a simple printable R emblem
   doc.setFillColor(...navy);doc.rect(0,0,210,49,'F');
-  // Load the actual Ritam Enterprise app logo rather than drawing a substitute lettermark.
+  // Load and rasterise the exact app logo SVG, bypassing any stale cached icon.
+  let logoData=null;
   try {
-    const logoData=await new Promise(resolve=>{
-      const image=new Image();
-      image.onload=()=>{try{const canvas=document.createElement('canvas');canvas.width=512;canvas.height=512;const ctx=canvas.getContext('2d');ctx.drawImage(image,0,0,512,512);resolve(canvas.toDataURL('image/png'));}catch(e){resolve(null);}};
-      image.onerror=()=>resolve(null);
-      image.src=new URL('./icon.svg?v=25',window.location.href).href;
-    });
-    if(logoData) doc.addImage(logoData,'PNG',L,7,36,36);
-  } catch(e) { console.warn('Invoice logo could not be loaded',e); }
-  doc.setTextColor(...white);doc.setFont('helvetica','bold');doc.setFontSize(17);txt('RITAM ENTERPRISE',50,20);
+    const response=await fetch(new URL('./icon.svg?v=26',window.location.href).href,{cache:'no-store'});
+    if(response.ok){
+      const svg=await response.text();
+      const svgBlob=new Blob([svg],{type:'image/svg+xml;charset=utf-8'});
+      const objectUrl=URL.createObjectURL(svgBlob);
+      logoData=await new Promise(resolve=>{
+        const image=new Image();
+        image.onload=()=>{try{const canvas=document.createElement('canvas');canvas.width=512;canvas.height=512;const ctx=canvas.getContext('2d');ctx.clearRect(0,0,512,512);ctx.drawImage(image,0,0,512,512);resolve(canvas.toDataURL('image/png'));}catch(e){resolve(null);}finally{URL.revokeObjectURL(objectUrl);}};
+        image.onerror=()=>{URL.revokeObjectURL(objectUrl);resolve(null);};
+        image.src=objectUrl;
+      });
+    }
+  } catch(e) { console.warn('Invoice logo load failed',e); }
+  if(logoData) doc.addImage(logoData,'PNG',L,5,39,39);
+  else {
+    // Fallback retains brand colours, but the real SVG is preferred.
+    doc.setFillColor(...blue);doc.roundedRect(L,7,32,32,2,2,'F');
+    doc.setTextColor(...white);doc.setFont('helvetica','bold');doc.setFontSize(22);txt('R',L+16,27,{align:'center'});
+  }
+  doc.setTextColor(...white);doc.setFont('helvetica','bold');doc.setFontSize(17);txt('RITAM ENTERPRISE',53,20);
   doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(235,241,250);
-  txt('BUILDING MATERIALS & HARDWARE GOODS',50,27);
-  txt('CEMENT  |  TMT  |  SAND  |  BRICKS  |  HARDWARE',50,33);
-  if(shop.phone) txt('Phone: '+String(shop.phone),50,40);
+  txt('BUILDING MATERIALS & HARDWARE GOODS',53,27);
+  txt('CEMENT  |  TMT  |  SAND  |  BRICKS  |  HARDWARE',53,33);
+  if(shop.phone) txt('Phone: '+String(shop.phone),53,40);
   doc.setTextColor(...white);doc.setFont('helvetica','bold');doc.setFontSize(17);txt('INVOICE',R,17,{align:'right'});
   doc.setFont('helvetica','normal');doc.setFontSize(8);txt('CASH / CREDIT BILL',R,23,{align:'right'});
   doc.setFontSize(8.3);txt('Bill No.          :  '+String(b.bill_number),R,31,{align:'right'});
@@ -573,7 +585,8 @@ async function createBillPdf(b,c,items,paid,due){
   // Branded footer
   doc.setFillColor(...navy);doc.rect(0,279,210,18,'F');
   doc.setTextColor(...white);doc.setFont('helvetica','bold');doc.setFontSize(8.5);
-  if(shop.phone) txt('Phone: '+String(shop.phone),L,286);
+  const footerPhone=shop.phone?('Phone: '+String(shop.phone)):'RITAM ENTERPRISE';
+  txt(footerPhone,L,286);
   if(shop.address) {doc.setFont('helvetica','normal');doc.setFontSize(7.5);txt(String(shop.address).slice(0,70),L,292);}
   if(shop.email) {doc.setFont('helvetica','normal');doc.setFontSize(7.5);txt(String(shop.email),R,286,{align:'right'});}
   doc.setTextColor(190,210,235);doc.setFont('helvetica','normal');doc.setFontSize(6.5);txt('THANK YOU FOR YOUR BUSINESS',C,293,{align:'center'});

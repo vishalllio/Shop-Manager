@@ -1,4 +1,4 @@
-const CACHE='ritam-enterprise-v2';
+const CACHE='ritam-enterprise-v3';
 const ASSETS=['./','./manifest.json'];
 
 self.addEventListener('install',event=>{

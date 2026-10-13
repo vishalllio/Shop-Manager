@@ -486,19 +486,20 @@ async function createBillPdf(b,c,items,paid,due){
   } catch(e){console.warn('Logo could not be loaded',e);}
   // White corporate header with actual brand mark and a contrasting invoice panel.
   doc.setFillColor(...white);doc.rect(0,0,210,297,'F');
-  doc.setFillColor(...navy);doc.triangle(122,0,210,0,210,30,'F');
-  doc.setFillColor(...blue);doc.triangle(116,0,124,0,145,35,'F');
+  // Reserve a solid, high-contrast panel for invoice metadata so no diagonal overlaps the text.
+  doc.setFillColor(...navy);doc.rect(139,0,71,46,'F');
+  doc.setFillColor(...blue);doc.triangle(130,0,139,0,139,15,'F');
   if(logoData) doc.addImage(logoData,'PNG',L,8,35,35);
   else {doc.setFillColor(...navy);doc.roundedRect(L,8,35,35,2,2,'F');doc.setTextColor(...white);doc.setFont('helvetica','bold');doc.setFontSize(25);txt('R',L+17.5,31,{align:'center'});}
   doc.setTextColor(...navy);doc.setFont('helvetica','bold');doc.setFontSize(19);txt('RITAM',47,23);
   doc.setTextColor(...blue);doc.setFontSize(14);txt('ENTERPRISE',47,32);
   doc.setTextColor(...ink);doc.setFont('helvetica','normal');doc.setFontSize(7.2);txt('BUILDING MATERIALS & HARDWARE GOODS',47,39);
   doc.setFont('helvetica','bold');doc.setFontSize(7.1);txt('CEMENT   |   TMT   |   SAND   |   BRICKS   |   HARDWARE',L,51);
-  doc.setTextColor(...white);doc.setFont('helvetica','bold');doc.setFontSize(17);txt('INVOICE',R,12,{align:'right'});
-  doc.setFontSize(8);doc.setFont('helvetica','normal');txt('CASH / CREDIT BILL',R,19,{align:'right'});
-  doc.setFontSize(7.8);txt('Bill No.          :  '+String(b.bill_number),R,27,{align:'right'});
-  txt('Invoice Date  :  '+dateText,R,33,{align:'right'});
-  txt('Payment Mode :  '+(due>0?(paid>0?'Part Paid / Due':'Credit / Due'):'Paid'),R,39,{align:'right'});
+  doc.setTextColor(...white);doc.setFont('helvetica','bold');doc.setFontSize(16);txt('INVOICE',R,10,{align:'right'});
+  doc.setFontSize(7.4);doc.setFont('helvetica','normal');txt('CASH / CREDIT BILL',R,16,{align:'right'});
+  doc.setFontSize(7.1);txt('Bill No.: '+String(b.bill_number),R,25,{align:'right'});
+  txt('Date: '+dateText,R,32,{align:'right'});
+  txt('Payment: '+(due>0?(paid>0?'Part Paid / Due':'Credit / Due'):'Paid'),R,39,{align:'right'});
   line(L,56,R,56,blue,.6);
 
   // Customer and delivery cards

@@ -7,9 +7,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>Ritam Enterprise</title>
-  <link rel="manifest" href="manifest.json?v=31" />
-  <link rel="icon" type="image/svg+xml" href="icon.svg?v=31" />
-  <link rel="icon" type="image/png" sizes="512x512" href="icon.svg?v=31" />
+  <link rel="manifest" href="manifest.json?v=32" />
+  <link rel="icon" type="image/svg+xml" href="icon.svg?v=32" />
+  <link rel="icon" type="image/png" sizes="512x512" href="icon.svg?v=32" />
   <meta name="apple-mobile-web-app-title" content="Ritam Enterprise" />
   <style>
     :root{--bg:#f6f8fc;--surface:#fff;--card:#fff;--text:#0b1220;--muted:#64748b;--line:#e5eaf2;--primary:#0b1220;--accent:#2563eb;--accent-soft:#eff6ff;--danger:#dc2626;--ok:#16a34a;--shadow:0 10px 35px rgba(15,23,42,.06);--shadow-lg:0 20px 60px rgba(15,23,42,.10);--radius:16px}
@@ -88,15 +88,21 @@
       <div class="field"><label>Password</label><input id="password" type="password" autocomplete="current-password" /></div>
       <div class="remember-row">
         <label class="remember-label"><input id="rememberMe" type="checkbox" checked /> <span>Remember me</span></label>
+        <button type="button" class="text-button" id="forgotPassword">Forgot password?</button>
       </div>
       <button class="btn accent" style="width:100%" type="submit">Sign in</button>
+    </form>
+    <form id="resetPasswordForm" class="hidden">
+      <div class="field"><label>New password</label><input id="newPassword" type="password" autocomplete="new-password" minlength="8" required /></div>
+      <div class="field"><label>Confirm new password</label><input id="confirmPassword" type="password" autocomplete="new-password" minlength="8" required /></div>
+      <button class="btn accent" style="width:100%" type="submit">Save new password</button>
     </form>
   </div>
 </div>
 
 <div id="app" class="app hidden">
   <aside class="side">
-    <div class="brand-wrap"><img class="brand-mark" src="icon.svg?v=31" alt="Ritam Enterprise logo" /><div class="brand-copy"><strong>Ritam Enterprise</strong><span>Business Suite</span></div></div>
+    <div class="brand-wrap"><img class="brand-mark" src="icon.svg?v=32" alt="Ritam Enterprise logo" /><div class="brand-copy"><strong>Ritam Enterprise</strong><span>Business Suite</span></div></div>
     <div class="nav-section">Workspace</div>
     <nav class="nav" id="nav">
       <button data-page="dashboard" class="active"><span class="nav-icon">◉</span><span class="nav-label">Dashboard</span><span class="nav-arrow">›</span></button>
@@ -477,7 +483,7 @@ async function createBillPdf(b,c,items,paid,due){
   const addressLines=doc.splitTextToSize(String(c?.address||'—'),78);
   let logoData=null;
   try {
-    const response=await fetch(new URL('./icon.svg?v=31',window.location.href).href,{cache:'no-store'});
+    const response=await fetch(new URL('./icon.svg?v=32',window.location.href).href,{cache:'no-store'});
     if(response.ok){
       const svg=await response.text();
       const objectUrl=URL.createObjectURL(new Blob([svg],{type:'image/svg+xml;charset=utf-8'}));
@@ -628,6 +634,46 @@ $('quickBill').onclick=()=>{state.page='billing';render();setTimeout(billModal,0
 $('logout').onclick=async()=>{await sb.auth.signOut();location.reload()};
 
 let enteringApp=null;
+const loginForm=$('loginForm');
+const resetPasswordForm=$('resetPasswordForm');
+function showPasswordReset(){
+  $('auth').classList.remove('hidden');$('app').classList.add('hidden');
+  loginForm.classList.add('hidden');resetPasswordForm.classList.remove('hidden');
+  $('authMsg').innerHTML=msg('success','Choose a new password for your account.');
+}
+$('forgotPassword').onclick=async()=>{
+  const email=$('email').value.trim();
+  if(!email){setAuthMessage('error','Enter your account email first, then tap Forgot password.');$('email').focus();return;}
+  const btn=$('forgotPassword');btn.disabled=true;
+  try{
+    const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:window.location.origin+window.location.pathname});
+    if(error) throw error;
+    setAuthMessage('success','Password reset email sent. Open the email and tap the reset link. Check Spam/Junk if it does not arrive.');
+  }catch(err){setAuthMessage('error',err?.message||'Could not send password reset email.');}
+  finally{btn.disabled=false;}
+};
+resetPasswordForm.onsubmit=async e=>{
+  e.preventDefault();
+  const password=$('newPassword').value,confirm=$('confirmPassword').value;
+  if(password.length<8){setAuthMessage('error','Use at least 8 characters.');return;}
+  if(password!==confirm){setAuthMessage('error','The passwords do not match.');return;}
+  const btn=resetPasswordForm.querySelector('button[type="submit"]');btn.disabled=true;
+  try{
+    const {error}=await sb.auth.updateUser({password});
+    if(error) throw error;
+    history.replaceState(null,'',window.location.pathname+'?v=31');
+    resetPasswordForm.classList.add('hidden');loginForm.classList.remove('hidden');
+    $('password').value='';$('newPassword').value='';$('confirmPassword').value='';
+    setAuthMessage('success','Password updated. Please sign in with your new password.');
+    await sb.auth.signOut();
+  }catch(err){setAuthMessage('error',err?.message||'Could not update password. Please reopen the reset email link.');}
+  finally{btn.disabled=false;}
+};
+sb.auth.onAuthStateChange((event)=>{
+  if(event==='PASSWORD_RECOVERY') showPasswordReset();
+});
+if(new URLSearchParams(window.location.hash.slice(1)).get('type')==='recovery') showPasswordReset();
+
 $('loginForm').onsubmit=async e=>{
   e.preventDefault();
   const email=$('email').value.trim(), password=$('password').value;

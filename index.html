@@ -7,9 +7,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>Ritam Enterprise</title>
-  <link rel="manifest" href="manifest.json?v=22" />
-  <link rel="icon" type="image/svg+xml" href="icon.svg?v=22" />
-  <link rel="icon" type="image/png" sizes="512x512" href="icon.svg?v=22" />
+  <link rel="manifest" href="manifest.json?v=29" />
+  <link rel="icon" type="image/svg+xml" href="icon.svg?v=29" />
+  <link rel="icon" type="image/png" sizes="512x512" href="icon.svg?v=29" />
   <meta name="apple-mobile-web-app-title" content="Ritam Enterprise" />
   <style>
     :root{--bg:#f6f8fc;--surface:#fff;--card:#fff;--text:#0b1220;--muted:#64748b;--line:#e5eaf2;--primary:#0b1220;--accent:#2563eb;--accent-soft:#eff6ff;--danger:#dc2626;--ok:#16a34a;--shadow:0 10px 35px rgba(15,23,42,.06);--shadow-lg:0 20px 60px rgba(15,23,42,.10);--radius:16px}
@@ -96,7 +96,7 @@
 
 <div id="app" class="app hidden">
   <aside class="side">
-    <div class="brand-wrap"><img class="brand-mark" src="icon.svg?v=22" alt="Ritam Enterprise logo" /><div class="brand-copy"><strong>Ritam Enterprise</strong><span>Business Suite</span></div></div>
+    <div class="brand-wrap"><img class="brand-mark" src="icon.svg?v=29" alt="Ritam Enterprise logo" /><div class="brand-copy"><strong>Ritam Enterprise</strong><span>Business Suite</span></div></div>
     <div class="nav-section">Workspace</div>
     <nav class="nav" id="nav">
       <button data-page="dashboard" class="active"><span class="nav-icon">◉</span><span class="nav-label">Dashboard</span><span class="nav-arrow">›</span></button>
@@ -477,7 +477,7 @@ async function createBillPdf(b,c,items,paid,due){
   const addressLines=doc.splitTextToSize(String(c?.address||'—'),78);
   let logoData=null;
   try {
-    const response=await fetch(new URL('./icon.svg?v=27',window.location.href).href,{cache:'no-store'});
+    const response=await fetch(new URL('./icon.svg?v=29',window.location.href).href,{cache:'no-store'});
     if(response.ok){
       const svg=await response.text();
       const objectUrl=URL.createObjectURL(new Blob([svg],{type:'image/svg+xml;charset=utf-8'}));
@@ -487,19 +487,19 @@ async function createBillPdf(b,c,items,paid,due){
   // White corporate header with actual brand mark and a contrasting invoice panel.
   doc.setFillColor(...white);doc.rect(0,0,210,297,'F');
   // Reserve a solid, high-contrast panel for invoice metadata so no diagonal overlaps the text.
-  doc.setFillColor(...navy);doc.rect(139,0,71,46,'F');
-  doc.setFillColor(...blue);doc.triangle(130,0,139,0,139,15,'F');
+  doc.setFillColor(...navy);doc.rect(128,0,82,48,'F');
+  doc.setFillColor(...blue);doc.rect(124,0,4,48,'F');
   if(logoData) doc.addImage(logoData,'PNG',L,8,35,35);
   else {doc.setFillColor(...navy);doc.roundedRect(L,8,35,35,2,2,'F');doc.setTextColor(...white);doc.setFont('helvetica','bold');doc.setFontSize(25);txt('R',L+17.5,31,{align:'center'});}
   doc.setTextColor(...navy);doc.setFont('helvetica','bold');doc.setFontSize(19);txt('RITAM',47,23);
   doc.setTextColor(...blue);doc.setFontSize(14);txt('ENTERPRISE',47,32);
   doc.setTextColor(...ink);doc.setFont('helvetica','normal');doc.setFontSize(7.2);txt('BUILDING MATERIALS & HARDWARE GOODS',47,39);
   doc.setFont('helvetica','bold');doc.setFontSize(7.1);txt('CEMENT   |   TMT   |   SAND   |   BRICKS   |   HARDWARE',L,51);
-  doc.setTextColor(...white);doc.setFont('helvetica','bold');doc.setFontSize(16);txt('INVOICE',R,10,{align:'right'});
-  doc.setFontSize(7.4);doc.setFont('helvetica','normal');txt('CASH / CREDIT BILL',R,16,{align:'right'});
-  doc.setFontSize(7.1);txt('Bill No.: '+String(b.bill_number),R,25,{align:'right'});
-  txt('Date: '+dateText,R,32,{align:'right'});
-  txt('Payment: '+(due>0?(paid>0?'Part Paid / Due':'Credit / Due'):'Paid'),R,39,{align:'right'});
+  doc.setTextColor(...white);doc.setFont('helvetica','bold');doc.setFontSize(16);txt('INVOICE',134,10);
+  doc.setFontSize(7.4);doc.setFont('helvetica','normal');txt('CASH / CREDIT BILL',134,16);
+  doc.setFontSize(7.2);txt('Bill No.: '+String(b.bill_number),134,25);
+  txt('Invoice Date: '+dateText,134,32);
+  txt('Payment: '+(due>0?(paid>0?'Part Paid / Due':'Credit / Due'):'Paid'),134,39);
   line(L,56,R,56,blue,.6);
 
   // Customer and delivery cards

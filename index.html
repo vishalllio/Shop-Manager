@@ -395,57 +395,59 @@ function filterRows(v){const q=v.toLowerCase();document.querySelectorAll('tbody 
 function productModal(p={}){modal(`<div class="modal-head"><h3>${p.id?'Edit':'Add'} product</h3><button class="btn secondary" onclick="window.closeModal()">Close</button></div><form id="productForm"><div class="form-grid"><div class="field"><label>Name</label><input name="name" required value="${esc(p.name)}"></div><div class="field"><label>Category</label><input name="category" value="${esc(p.category)}"></div><div class="field"><label>Unit</label><input name="unit" required value="${esc(p.unit||'pcs')}"></div><div class="field"><label>Low stock limit</label><input name="low" type="number" step="0.001" value="${p.low_stock_limit??0}"></div><div class="field"><label>Purchase rate</label><input name="purchase" type="number" step="0.01" value="${p.purchase_rate??0}"></div><div class="field"><label>Selling rate</label><input name="selling" type="number" step="0.01" value="${p.selling_rate??0}"></div><div class="field"><label>Current stock</label><input name="stock" type="number" step="0.001" value="${p.stock??0}"></div></div><button class="btn accent" type="submit">Save product</button><div id="formMsg"></div></form>`);$('productForm').addEventListener('submit',async e=>{e.preventDefault();const f=new FormData(e.target);const row={shop_id:state.shop.id,name:f.get('name'),category:f.get('category')||null,unit:f.get('unit'),purchase_rate:Number(f.get('purchase')||0),selling_rate:Number(f.get('selling')||0),stock:Number(f.get('stock')||0),low_stock_limit:Number(f.get('low')||0),active:true};const r=p.id?await sb.from('products').update(row).eq('id',p.id):await sb.from('products').insert(row);if(r.error){$('formMsg').innerHTML=msg('error',r.error.message);return}closeModal();await loadAll(session);render();});}
 function customerModal(c={}){modal(`<div class="modal-head"><h3>${c.id?'Edit':'Add'} customer</h3><button class="btn secondary" onclick="window.closeModal()">Close</button></div><form id="customerForm"><div class="form-grid"><div class="field"><label>Name</label><input name="name" required value="${esc(c.name)}"></div><div class="field"><label>Phone</label><input name="phone" value="${esc(c.phone)}"></div><div class="field"><label>Address</label><input name="address" value="${esc(c.address)}"></div><div class="field"><label>Opening outstanding</label><input name="opening" type="number" step="0.01" value="${c.opening_balance??0}"></div></div><button class="btn accent" type="submit">Save customer</button><div id="formMsg"></div></form>`);$('customerForm').addEventListener('submit',async e=>{e.preventDefault();const f=new FormData(e.target);const row={shop_id:state.shop.id,name:f.get('name'),phone:f.get('phone')||null,address:f.get('address')||null,opening_balance:Number(f.get('opening')||0)};const r=c.id?await sb.from('customers').update(row).eq('id',c.id):await sb.from('customers').insert(row);if(r.error){$('formMsg').innerHTML=msg('error',r.error.message);return}closeModal();await loadAll();render();});}
 async function billModal(){
-  const products=state.products;modal(`<div class="modal-head"><h3>Create non-GST bill</h3><button class="btn secondary" id="closeBill">Close</button></div><form id="billForm"><div class="form-grid"><div class="field"><label>Customer</label><select name="customer"><option value="">Walk-in customer</option>${state.customers.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('')}</select></div><div class="field"><label>Invoice date</label><input name="bill_date" type="date" required max="${localDate(new Date())}" value="${localDate(new Date())}"><small class="muted">Choose an earlier date for a backdated invoice.</small></div><div class="field"><label>Paid amount</label><input name="paid" type="number" step="0.01" value="0"></div></div><div class="field"><label>Discount</label><input name="discount" type="number" step="0.01" value="0"></div><div class="bill-items" id="billItems"><div class="bill-row"><select class="wide product"><option value="">Select product</option>${products.map(p=>`<option value="${p.id}">${esc(p.name)} (${p.stock} ${esc(p.unit)})</option>`).join('')}</select><input class="qty" type="number" step="0.001" min="0.001" placeholder="Qty"><input class="rate" type="number" step="0.01" placeholder="Rate"><button type="button" class="btn danger small remove">×</button></div></div><button type="button" class="btn secondary small" id="addLine">+ Add item</button><div class="right" style="margin:16px 0;font-size:18px;font-weight:800">Total: <span id="billTotal">₹0.00</span></div><button class="btn accent" type="submit">Save bill</button><div id="billMsg"></div></form>`);
-  $('closeBill').onclick=closeModal;const items=$('billItems');const recalc=()=>{let t=0;items.querySelectorAll('.bill-row').forEach(r=>{t+=Number(r.querySelector('.qty').value||0)*Number(r.querySelector('.rate').value||0)});t-=Number(document.querySelector('[name=discount]').value||0);$('billTotal').textContent=money(Math.max(0,t));};
-  items.querySelector('.rate').addEventListener('input',recalc);items.querySelector('.qty').addEventListener('input',recalc);document.querySelector('[name=discount]').addEventListener('input',recalc);items.querySelector('.product').addEventListener('change',e=>{const p=products.find(x=>x.id===e.target.value);if(p)e.target.closest('.bill-row').querySelector('.rate').value=p.selling_rate;recalc()});items.querySelector('.remove').onclick=e=>{if(items.querySelectorAll('.bill-row').length>1)e.target.closest('.bill-row').remove();recalc()};$('addLine').onclick=()=>{const r=items.querySelector('.bill-row').cloneNode(true);r.querySelectorAll('input').forEach(i=>i.value='');r.querySelector('select').value='';r.querySelector('.remove').onclick=e=>{if(items.querySelectorAll('.bill-row').length>1)e.target.closest('.bill-row').remove();recalc()};r.querySelector('.product').onchange=e=>{const p=products.find(x=>x.id===e.target.value);if(p)r.querySelector('.rate').value=p.selling_rate;recalc()};r.querySelector('.qty').oninput=recalc;r.querySelector('.rate').oninput=recalc;items.appendChild(r)};
+  const products=state.products;
+  const productOptions=()=>'<option value="">Select product</option>'+products.map(p=>`<option value="${p.id}">${esc(p.name)} (${p.stock} ${p.tmt_enabled?'kg':esc(p.unit)})</option>`).join('');
+  const rowHtml=()=>`<div class="bill-row"><select class="wide product">${productOptions()}</select><select class="sale-unit" style="display:none"><option value="kg">KG</option><option value="pcs">PCS</option></select><input class="qty" type="number" step="0.001" min="0.001" placeholder="Qty"><input class="rate" type="number" step="0.01" min="0" placeholder="Rate"><button type="button" class="btn danger small remove">×</button><div class="stock-hint muted" style="grid-column:1/-1;font-size:11px"></div></div>`;
+  modal(`<div class="modal-head"><h3>Create non-GST bill</h3><button class="btn secondary" id="closeBill">Close</button></div><form id="billForm"><div class="form-grid"><div class="field"><label>Customer</label><select name="customer"><option value="">Walk-in customer</option>${state.customers.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('')}</select></div><div class="field"><label>Invoice date</label><input name="bill_date" type="date" required max="${localDate(new Date())}" value="${localDate(new Date())}"><small class="muted">Choose an earlier date for a backdated invoice.</small></div><div class="field"><label>Paid amount</label><input name="paid" type="number" min="0" step="0.01" value="0"></div></div><div class="field"><label>Discount</label><input name="discount" type="number" min="0" step="0.01" value="0"></div><div class="bill-items" id="billItems">${rowHtml()}</div><button type="button" class="btn secondary small" id="addLine">+ Add item</button><div class="right" style="margin:16px 0;font-size:18px;font-weight:800">Total: <span id="billTotal">₹0.00</span></div><button class="btn accent" type="submit">Save bill</button><div id="billMsg"></div></form>`);
+  $('closeBill').onclick=closeModal;
+  const items=$('billItems');
+  const setupRow=(r)=>{
+    const productSelect=r.querySelector('.product'), unitSelect=r.querySelector('.sale-unit'), qtyInput=r.querySelector('.qty'), rateInput=r.querySelector('.rate'), hint=r.querySelector('.stock-hint');
+    const selected=()=>products.find(p=>p.id===productSelect.value);
+    const setRate=()=>{const p=selected();if(!p)return;rateInput.value=p.tmt_enabled?(unitSelect.value==='pcs'?p.selling_rate_pcs:p.selling_rate_kg):p.selling_rate;};
+    const updateHint=()=>{const p=selected();if(!p){hint.textContent='';return}if(p.tmt_enabled){const kg=unitSelect.value==='pcs'?Number(qtyInput.value||0)*Number(p.weight_per_piece||0):Number(qtyInput.value||0);hint.textContent=`Stock: ${p.stock} kg • ${unitSelect.value==='pcs'?'Deducts '+kg.toFixed(3)+' kg at '+p.weight_per_piece+' kg per piece':'Deducts '+kg.toFixed(3)+' kg'}`;}else{hint.textContent=`Available: ${p.stock} ${p.unit}`;}}
+    productSelect.addEventListener('change',()=>{const p=selected();unitSelect.style.display=p?.tmt_enabled?'block':'none';if(p?.tmt_enabled){unitSelect.value='kg';}setRate();updateHint();recalc();});
+    unitSelect.addEventListener('change',()=>{setRate();updateHint();recalc();});
+    qtyInput.addEventListener('input',()=>{updateHint();recalc()});rateInput.addEventListener('input',recalc);
+    r.querySelector('.remove').onclick=()=>{if(items.querySelectorAll('.bill-row').length>1){r.remove();recalc()}};
+    updateHint();
+  };
+  const recalc=()=>{let t=0;items.querySelectorAll('.bill-row').forEach(r=>{t+=Number(r.querySelector('.qty').value||0)*Number(r.querySelector('.rate').value||0)});t-=Number(document.querySelector('[name=discount]').value||0);$('billTotal').textContent=money(Math.max(0,t));};
+  setupRow(items.querySelector('.bill-row'));
+  document.querySelector('[name=discount]').addEventListener('input',recalc);
+  $('addLine').onclick=()=>{const wrap=document.createElement('div');wrap.innerHTML=rowHtml();const r=wrap.firstElementChild;items.appendChild(r);setupRow(r);};
   $('billForm').onsubmit=async e=>{
     try{
       e.preventDefault();
       const fd=new FormData(e.target);
       const rows=[...items.querySelectorAll('.bill-row')].map(r=>{
         const product=products.find(p=>p.id===r.querySelector('.product').value);
-        return product?{product,qty:Number(r.querySelector('.qty').value||0),rate:Number(r.querySelector('.rate').value||0)}:null
+        if(!product)return null;
+        const qty=Number(r.querySelector('.qty').value||0), rate=Number(r.querySelector('.rate').value||0), unit=product.tmt_enabled?r.querySelector('.sale-unit').value:product.unit;
+        const stockQty=product.tmt_enabled&&unit==='pcs'?qty*Number(product.weight_per_piece||0):qty;
+        return {product,qty,rate,unit,stockQty};
       }).filter(Boolean);
-      if(!rows.length||rows.some(x=>x.qty<=0)){
-        $('billMsg').innerHTML=msg('error','Add at least one valid product and quantity.');
-        return;
-      }
-      const subtotal=rows.reduce((s,x)=>s+x.qty*x.rate,0);
+      if(!rows.length||rows.some(x=>x.qty<=0||x.rate<0||x.stockQty<=0)){ $('billMsg').innerHTML=msg('error','Select a product and enter a valid quantity and rate. For TMT sold by PCS, enter the weight per piece in Inventory.');return; }
+      const invalid=rows.find(x=>x.stockQty>x.product.stock+0.000001);
+      if(invalid){$('billMsg').innerHTML=msg('error',`${invalid.product.name} has only ${invalid.product.stock} ${invalid.product.tmt_enabled?'kg':invalid.product.unit} in stock.`);return;}
+      const subtotal=rows.reduce((sum,x)=>sum+x.qty*x.rate,0);
       const discount=Number(fd.get('discount')||0);
-      const total=Math.max(0,subtotal-discount);
-      const paid=Math.max(0,Math.min(total,Number(fd.get('paid')||0)));
+      if(discount<0||discount>subtotal){$('billMsg').innerHTML=msg('error','Discount cannot exceed the subtotal.');return;}
+      const total=Math.max(0,subtotal-discount), paid=Number(fd.get('paid')||0);
+      if(paid<0||paid>total){$('billMsg').innerHTML=msg('error','Paid amount must be between ₹0 and the bill total.');return;}
       const customerId=fd.get('customer')||null;
       const {data:{user:currentUser}}=await sb.auth.getUser();
-      if(!currentUser) throw new Error('Session expired. Please sign in again.');
-
-      const {data:bill,error}=await sb.rpc('create_sale',{
-        p_shop_id:state.shop.id,
-        p_customer_id:customerId,
-        p_subtotal:subtotal,
-        p_discount:discount,
-        p_grand_total:total,
-        p_paid_amount:paid,
-        p_payment_method:paid?'cash':null,
-        p_items:rows.map(x=>({
-          product_id:x.product.id,
-          quantity:x.qty,
-          rate:x.rate
-        }))
-      });
-
-      if(error) throw error;
-      if(!bill) throw new Error('Bill was not created.');
+      if(!currentUser)throw new Error('Session expired. Please sign in again.');
+      const {data:bill,error}=await sb.rpc('create_sale',{p_shop_id:state.shop.id,p_customer_id:customerId,p_subtotal:subtotal,p_discount:discount,p_grand_total:total,p_paid_amount:paid,p_payment_method:paid?'cash':null,p_items:rows.map(x=>({product_id:x.product.id,quantity:x.qty,rate:x.rate,unit:x.unit,stock_quantity:x.stockQty}))});
+      if(error)throw error;
+      if(!bill)throw new Error('Bill was not created.');
       const chosenDate=fd.get('bill_date');
-      if(chosenDate && chosenDate!==localDate(new Date(bill.bill_date))){
+      if(chosenDate&&chosenDate!==localDate(new Date(bill.bill_date))){
         const {error:dateError}=await sb.from('bills').update({bill_date:chosenDate+'T12:00:00+05:30'}).eq('id',bill.id).eq('shop_id',state.shop.id);
-        if(dateError) throw new Error('Bill '+bill.bill_number+' was created, but its invoice date could not be changed: '+dateError.message);
+        if(dateError)throw new Error('Bill '+bill.bill_number+' was created, but its invoice date could not be changed: '+dateError.message);
       }
-      closeModal();
-      await loadAll();
-      render();
-    }catch(err){
-      $('billMsg').innerHTML=msg('error',err?.message||String(err));
-    }
+      closeModal();await loadAll();render();
+    }catch(err){$('billMsg').innerHTML=msg('error',err?.message||String(err));}
   };
 }
 function viewBillModal(b){

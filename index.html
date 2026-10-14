@@ -7,9 +7,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>Ritam Enterprise</title>
-  <link rel="manifest" href="manifest.json?v=36" />
-  <link rel="icon" type="image/svg+xml" href="icon.svg?v=36" />
-  <link rel="icon" type="image/png" sizes="512x512" href="icon.svg?v=36" />
+  <link rel="manifest" href="manifest.json?v=37" />
+  <link rel="icon" type="image/svg+xml" href="icon.svg?v=37" />
+  <link rel="icon" type="image/png" sizes="512x512" href="icon.svg?v=37" />
   <meta name="apple-mobile-web-app-title" content="Ritam Enterprise" />
   <style>
     :root{--bg:#f6f8fc;--surface:#fff;--card:#fff;--text:#0b1220;--muted:#64748b;--line:#e5eaf2;--primary:#0b1220;--accent:#2563eb;--accent-soft:#eff6ff;--danger:#dc2626;--ok:#16a34a;--shadow:0 10px 35px rgba(15,23,42,.06);--shadow-lg:0 20px 60px rgba(15,23,42,.10);--radius:16px}
@@ -102,7 +102,7 @@
 
 <div id="app" class="app hidden">
   <aside class="side">
-    <div class="brand-wrap"><img class="brand-mark" src="icon.svg?v=36" alt="Ritam Enterprise logo" /><div class="brand-copy"><strong>Ritam Enterprise</strong><span>Business Suite</span></div></div>
+    <div class="brand-wrap"><img class="brand-mark" src="icon.svg?v=37" alt="Ritam Enterprise logo" /><div class="brand-copy"><strong>Ritam Enterprise</strong><span>Business Suite</span></div></div>
     <div class="nav-section">Workspace</div>
     <nav class="nav" id="nav">
       <button data-page="dashboard" class="active"><span class="nav-icon">◉</span><span class="nav-label">Dashboard</span><span class="nav-arrow">›</span></button>
@@ -468,7 +468,7 @@ function viewBillModal(b){
   const billText=`Ritam Enterprise\nBill ${b.bill_number}\nCustomer: ${c?.name||'Walk-in'}\nTotal: ${money(b.grand_total)}\nPaid: ${money(paid)}\nOutstanding: ${money(due)}`;
   const customerPhone=String(c?.phone||'').replace(/\D/g,'');
   $('printBillBtn').onclick=async()=>{try{const file=await createBillPdf(b,c,items,paid,due);const url=URL.createObjectURL(file);const w=window.open(url,'_blank');if(!w){const a=document.createElement('a');a.href=url;a.download='Ritam-Enterprise-'+b.bill_number+'.pdf';a.click();}setTimeout(()=>URL.revokeObjectURL(url),60000);}catch(e){alert(e?.message||'Could not create the PDF.');}};
-  $('whatsappBillBtn').onclick=()=>{if(customerPhone.length<10){alert('Customer does not have a valid WhatsApp phone number. Add the number in Customers first.');return;}const message=billText+'\n\nThank you for your business.';window.open('https://wa.me/'+(customerPhone.startsWith('91')?customerPhone:'91'+customerPhone)+'?text='+encodeURIComponent(message),'_blank');};
+  $('whatsappBillBtn').onclick=async()=>{if(customerPhone.length<10){alert('Customer does not have a valid WhatsApp phone number. Add the number in Customers first.');return;}const message=billText+'\n\nThank you for your business.';const phone=customerPhone.startsWith('91')?customerPhone:'91'+customerPhone;const btn=$('whatsappBillBtn');const oldLabel=btn.textContent;btn.disabled=true;btn.textContent='Preparing PDF…';try{const file=await createBillPdf(b,c,items,paid,due);if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({title:'Ritam Enterprise Bill '+b.bill_number,text:message,files:[file]});}else{const url=URL.createObjectURL(file);const a=document.createElement('a');a.href=url;a.download='Ritam-Enterprise-'+b.bill_number+'.pdf';a.click();setTimeout(()=>URL.revokeObjectURL(url),60000);window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(message),'_blank');alert('The bill PDF has been downloaded. WhatsApp will open with the message; attach the downloaded Ritam Enterprise PDF before sending. This browser does not support attaching files automatically.');}}catch(e){if(e?.name!=='AbortError')alert(e?.message||'Could not create/share the bill PDF. Use Share PDF instead.');}finally{if(btn.isConnected){btn.disabled=false;btn.textContent=oldLabel;}}};
   $('sharePdfBtn').onclick=async()=>{try{const file=await createBillPdf(b,c,items,paid,due);if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({title:'Ritam Enterprise Bill '+b.bill_number,text:billText,files:[file]});}else{const url=URL.createObjectURL(file);const a=document.createElement('a');a.href=url;a.download='Ritam-Enterprise-'+b.bill_number+'.pdf';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}}catch(e){alert(e?.message||'Could not create/share the PDF. Use Print / Save PDF instead.');}};
 }
 async function createBillPdf(b,c,items,paid,due){
@@ -485,7 +485,7 @@ async function createBillPdf(b,c,items,paid,due){
   const addressLines=doc.splitTextToSize(String(c?.address||'—'),78);
   let logoData=null;
   try {
-    const response=await fetch(new URL('./icon.svg?v=36',window.location.href).href,{cache:'no-store'});
+    const response=await fetch(new URL('./icon.svg?v=37',window.location.href).href,{cache:'no-store'});
     if(response.ok){
       const svg=await response.text();
       const objectUrl=URL.createObjectURL(new Blob([svg],{type:'image/svg+xml;charset=utf-8'}));

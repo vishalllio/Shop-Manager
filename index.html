@@ -7,8 +7,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>Ritam Enterprise</title>
-  <link rel="manifest" href="manifest.json?v=39" />
-  <link rel="icon" type="image/svg+xml" href="icon.svg?v=39" />
+  <link rel="manifest" href="manifest.json?v=40" />
+  <link rel="icon" type="image/svg+xml" href="icon.svg?v=40" />
   <link rel="icon" type="image/png" sizes="512x512" href="icon.svg?v=39" />
   <meta name="apple-mobile-web-app-title" content="Ritam Enterprise" />
   <style>
@@ -463,17 +463,17 @@ function viewBillModal(b){
     <div class="table-wrap" style="margin-top:16px"><table class="table" style="min-width:0"><tr><th>Item</th><th>HSN</th><th>Qty</th><th>Rate</th><th>Amount</th></tr>${items.map(i=>`<tr><td>${esc(i.product_name)}</td><td>${esc(i.hsn_code||'-')}</td><td>${i.quantity} ${esc(i.unit)}</td><td>${money(i.rate)}</td><td>${money(i.amount)}</td></tr>`).join('')}</table></div>
     <div style="max-width:360px;margin:16px 0 0 auto"><div style="display:flex;justify-content:space-between"><span>Subtotal</span><b>${money(b.subtotal)}</b></div><div style="display:flex;justify-content:space-between"><span>Discount</span><b>${money(b.discount)}</b></div><div style="display:flex;justify-content:space-between;font-size:18px;margin-top:8px"><span>Total</span><b>${money(b.grand_total)}</b></div><div style="display:flex;justify-content:space-between"><span>Paid</span><b>${money(paid)}</b></div><div style="display:flex;justify-content:space-between"><span>Outstanding</span><b>${money(due)}</b></div></div>
   </div>
-  <div class="toolbar no-print" style="margin-top:12px"><button class="btn accent" id="whatsappBillBtn">WhatsApp</button><button class="btn secondary" id="sharePdfBtn">Share PDF</button><button class="btn secondary" id="printBillBtn">Print / Save PDF</button></div>`);
+  <div class="toolbar no-print" style="margin-top:12px"><label for="billCopyMode" style="font-weight:700">Print copies</label><select id="billCopyMode" style="padding:10px;border:1px solid var(--line);border-radius:9px"><option value="both">Both: Buyer + Shop</option><option value="original">Original for Buyer only</option><option value="duplicate">Duplicate for Shop only</option></select><button class="btn accent" id="printBillBtn">Print / Save PDF</button><button class="btn secondary" id="whatsappBillBtn">WhatsApp</button><button class="btn secondary" id="sharePdfBtn">Share PDF</button></div>`);
   $('closeViewBill').onclick=closeModal;
   const billText=`Ritam Enterprise\nBill ${b.bill_number}\nCustomer: ${c?.name||'Walk-in'}\nTotal: ${money(b.grand_total)}\nPaid: ${money(paid)}\nOutstanding: ${money(due)}`;
   const customerPhone=String(c?.phone||'').replace(/\D/g,'');
-  $('printBillBtn').onclick=async()=>{try{const file=await createBillPdf(b,c,items,paid,due);const url=URL.createObjectURL(file);const w=window.open(url,'_blank');if(!w){const a=document.createElement('a');a.href=url;a.download='Ritam-Enterprise-'+b.bill_number+'.pdf';a.click();}setTimeout(()=>URL.revokeObjectURL(url),60000);}catch(e){alert(e?.message||'Could not create the PDF.');}};
+  $('printBillBtn').onclick=async()=>{const btn=$('printBillBtn');const old=btn.textContent;btn.disabled=true;btn.textContent='Preparing bill…';try{const mode=$('billCopyMode').value;const labels=mode==='both'?['ORIGINAL FOR BUYER','DUPLICATE FOR SHOP']:mode==='duplicate'?['DUPLICATE FOR SHOP']:['ORIGINAL FOR BUYER'];const file=await createBillCopiesPdf(b,c,items,paid,due,labels);const url=URL.createObjectURL(file);const w=window.open(url,'_blank');if(!w){const a=document.createElement('a');a.href=url;a.download=file.name;a.click();}setTimeout(()=>URL.revokeObjectURL(url),60000);}catch(e){alert(e?.message||'Could not create the PDF.');}finally{btn.disabled=false;btn.textContent=old;}};
   // Build the PDF while the bill modal is open so the tap can immediately invoke the native share sheet.
   const billPdfPromise=createBillPdf(b,c,items,paid,due);
   $('whatsappBillBtn').onclick=async()=>{const message=billText+'\n\nThank you for your business.';const btn=$('whatsappBillBtn');const oldLabel=btn.textContent;btn.disabled=true;btn.textContent='Opening share…';try{const file=await billPdfPromise;if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({title:'Ritam Enterprise Bill '+b.bill_number,text:message,files:[file]});}else{const url=URL.createObjectURL(file);const a=document.createElement('a');a.href=url;a.download=file.name;a.click();setTimeout(()=>URL.revokeObjectURL(url),60000);alert('This browser cannot attach files to WhatsApp automatically. The PDF has been downloaded. Open WhatsApp and attach '+file.name+' manually, or use Share PDF on an iPhone/iPad browser that supports file sharing.');}}catch(e){if(e?.name!=='AbortError')alert(e?.message||'Could not create/share the bill PDF.');}finally{if(btn.isConnected){btn.disabled=false;btn.textContent=oldLabel;}}};
   $('sharePdfBtn').onclick=async()=>{try{const file=await billPdfPromise;if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({title:'Ritam Enterprise Bill '+b.bill_number,text:billText,files:[file]});}else{const url=URL.createObjectURL(file);const a=document.createElement('a');a.href=url;a.download=file.name;a.click();setTimeout(()=>URL.revokeObjectURL(url),60000);alert('PDF downloaded. This browser does not support sharing the PDF as an attachment.');}}catch(e){if(e?.name!=='AbortError')alert(e?.message||'Could not create/share the PDF.');}};
 }
-async function createBillPdf(b,c,items,paid,due){
+async function createBillPdf(b,c,items,paid,due,copyLabel='ORIGINAL FOR BUYER'){
   const {jsPDF}=await import('https://cdn.jsdelivr.net/npm/jspdf@2.5.1/+esm');
   const doc=new jsPDF({unit:'mm',format:'a4'});
   const L=7,R=203,W=196,navy=[8,39,79],blue=[27,137,213],pale=[235,243,251],light=[249,251,253],grid=[211,220,230],ink=[24,31,42],muted=[86,99,114],white=[255,255,255];
@@ -508,6 +508,7 @@ async function createBillPdf(b,c,items,paid,due){
   doc.setTextColor(...ink);doc.setFont('helvetica','normal');doc.setFontSize(8);txt('BUILDING MATERIALS & HARDWARE GOODS',48,41);
   doc.setTextColor(...white);doc.setFont('helvetica','bold');doc.setFontSize(17);txt('INVOICE',R,9,{align:'right'});
   doc.setFont('helvetica','normal');doc.setFontSize(8);txt('CASH / CREDIT BILL',R,16,{align:'right'});
+  doc.setFont('helvetica','bold');doc.setFontSize(7.2);txt(copyLabel,165,49,{align:'center'});
   doc.setFontSize(7.5);doc.setFont('helvetica','normal');
   txt('Bill No.',153,27);txt(':',174,27);doc.setFont('helvetica','bold');txt(String(b.bill_number||''),R,27,{align:'right'});
   doc.setFont('helvetica','normal');txt('Invoice Date',153,34);txt(':',174,34);doc.setFont('helvetica','bold');txt(dateText,R,34,{align:'right'});
@@ -592,7 +593,14 @@ async function createBillPdf(b,c,items,paid,due){
   if(shop.address){doc.setFont('helvetica','normal');doc.setFontSize(7.4);txt(String(shop.address).slice(0,78),L+3,287);}
   if(shop.email){doc.setFont('helvetica','normal');doc.setFontSize(7.4);txt(String(shop.email),L+3,292);}
   doc.setTextColor(200,220,243);doc.setFont('helvetica','normal');doc.setFontSize(6.8);txt('THANK YOU FOR YOUR BUSINESS',R,291,{align:'right'});
-  return new File([doc.output('blob')],'Ritam-Enterprise-'+b.bill_number+'.pdf',{type:'application/pdf'});
+  return new File([doc.output('blob')],'Ritam-Enterprise-'+b.bill_number+'-'+copyLabel.toLowerCase().replace(/[^a-z]+/g,'-')+'.pdf',{type:'application/pdf'});
+}
+async function createBillCopiesPdf(b,c,items,paid,due,labels){
+  if(labels.length===1)return createBillPdf(b,c,items,paid,due,labels[0]);
+  const {PDFDocument}=await import('https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/+esm');
+  const merged=await PDFDocument.create();
+  for(const label of labels){const file=await createBillPdf(b,c,items,paid,due,label);const source=await PDFDocument.load(await file.arrayBuffer());const pages=await merged.copyPages(source,source.getPageIndices());pages.forEach(page=>merged.addPage(page));}
+  return new File([await merged.save()],'Ritam-Enterprise-'+b.bill_number+'-buyer-and-shop-copies.pdf',{type:'application/pdf'});
 }
 function numberToWordsIndian(n){
   n=Math.floor(Math.abs(Number(n)||0)); if(n===0)return 'Zero';

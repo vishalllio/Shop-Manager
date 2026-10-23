@@ -7,8 +7,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>Ritam Enterprise</title>
-  <link rel="manifest" href="manifest.json?v=47" />
-  <link rel="icon" type="image/svg+xml" href="icon.svg?v=47" />
+  <link rel="manifest" href="manifest.json?v=48" />
+  <link rel="icon" type="image/svg+xml" href="icon.svg?v=48" />
   <link rel="icon" type="image/png" sizes="512x512" href="icon.svg?v=42" />
   <meta name="apple-mobile-web-app-title" content="Ritam Enterprise" />
   <style>
@@ -328,7 +328,7 @@ function pendingCustomerModal(customer){
   document.querySelectorAll('.pending-view-bill').forEach(btn=>btn.addEventListener('click',()=>{const b=state.bills.find(x=>x.id===btn.dataset.id);if(b)viewBillModal(b);}));
 }
 function billingView(){return `<div class="card"><div class="toolbar"><button class="btn accent" id="newBill">+ Create bill</button><span class="muted">Non-GST billing · Cancelled bills are excluded from totals</span></div><div class="table-wrap"><table class="table"><tr><th>Bill</th><th>Date</th><th>Customer</th><th>Total</th><th>Paid</th><th>Outstanding</th><th>Status</th><th></th></tr>${state.bills.map(b=>{const c=state.customers.find(x=>x.id===b.customer_id);return `<tr><td>${esc(b.bill_number)}</td><td>${new Date(b.bill_date).toLocaleString('en-IN')}</td><td>${esc(c?.name||'Walk-in')}</td><td>${money(b.grand_total)}</td><td>${money(billPayments(b))}</td><td>${money(billOutstanding(b))}</td><td>${b.cancelled_at?'<span class="badge danger">Cancelled</span>':'<span class="badge ok">Active</span>'}</td><td><button class="btn small secondary view-bill" data-id="${b.id}">View</button></td></tr>`}).join('')||'<tr><td colspan="8" class="empty">No bills yet.</td></tr>'}</table></div></div>`}
-function paymentsView(){return `<div class="card"><div class="toolbar"><button class="btn accent" id="addPayment">+ Record payment</button></div><div class="table-wrap"><table class="table"><tr><th>Date</th><th>Customer</th><th>Amount</th><th>Method</th><th>Reference</th></tr>${state.payments.map(p=>{const c=state.customers.find(x=>x.id===p.customer_id);return `<tr><td>${new Date(p.payment_date).toLocaleString('en-IN')}</td><td>${esc(c?.name||'—')}</td><td>${money(p.amount)}</td><td>${esc(p.payment_method)}</td><td>${esc(p.reference||'—')}</td></tr>`}).join('')||'<tr><td colspan="5" class="empty">No payments yet.</td></tr>'}</table></div></div>`}
+function paymentsView(){const rows=[...state.payments.map(p=>({date:p.payment_date,customer:state.customers.find(x=>x.id===p.customer_id)?.name||'—',amount:Number(p.amount||0),method:p.payment_method||'—',reference:p.reference||'—'})),...state.bills.filter(b=>!b.cancelled_at&&!b.customer_id&&Number(b.paid_amount||0)>0).map(b=>({date:b.created_at||b.bill_date,customer:'Walk-in',amount:Number(b.paid_amount||0),method:b.payment_method||'—',reference:b.bill_number+' (Walk-in bill)'}))].sort((a,b)=>new Date(b.date)-new Date(a.date));return `<div class="card"><div class="toolbar"><button class="btn accent" id="addPayment">+ Record payment</button></div><div class="table-wrap"><table class="table"><tr><th>Date</th><th>Customer</th><th>Amount</th><th>Method</th><th>Reference</th></tr>${rows.map(p=>`<tr><td>${new Date(p.date).toLocaleString('en-IN')}</td><td>${esc(p.customer)}</td><td>${money(p.amount)}</td><td>${esc(p.method)}</td><td>${esc(p.reference)}</td></tr>`).join('')||'<tr><td colspan="5" class="empty">No payments yet.</td></tr>'}</table></div></div>`}
 function staffView(){
   const month=new Date().toISOString().slice(0,7);
   const active=state.staff;

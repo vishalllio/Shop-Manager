@@ -7,8 +7,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>Ritam Enterprise</title>
-  <link rel="manifest" href="manifest.json?v=60" />
-  <link rel="icon" type="image/svg+xml" href="icon.svg?v=60" />
+  <link rel="manifest" href="manifest.json?v=61" />
+  <link rel="icon" type="image/svg+xml" href="icon.svg?v=61" />
   <link rel="icon" type="image/png" sizes="512x512" href="icon.svg?v=42" />
   <meta name="apple-mobile-web-app-title" content="Ritam Enterprise" />
   <style>
@@ -348,7 +348,7 @@ function staffView(){
     <div class="card stat"><div class="label">PAID THIS MONTH</div><div class="value">${money(paidThisMonth)}</div></div>
     <div class="card stat"><div class="label">SALARY PENDING</div><div class="value">${money(Math.max(0,totalSalary-paidThisMonth))}</div></div>
   </div>
-  <div class="card" style="margin-top:18px"><div class="toolbar"><button class="btn accent" id="addStaff">+ Add staff</button><button class="btn secondary" id="attendanceBtn">Attendance</button><button class="btn secondary" id="salaryBtn">Salary records</button><input id="staffSearch" placeholder="Search staff..." /></div>
+  <div class="card" style="margin-top:18px"><p class="muted" style="margin-top:0">Simple staff management: add employee details, record attendance separately, and enter salary payments manually. Attendance does not reduce salary automatically.</p><div class="toolbar"><button class="btn accent" id="addStaff">+ Add staff</button><button class="btn secondary" id="attendanceBtn">Daily attendance</button><button class="btn secondary" id="salaryBtn">Enter salary payment</button><input id="staffSearch" placeholder="Search staff..." /></div>
   <div class="table-wrap"><table class="table"><tr><th>Name</th><th>Role</th><th>Phone</th><th>Monthly salary</th><th>This month</th><th></th></tr>
   ${active.map(s=>{const pay=state.salaryPayments.find(x=>x.staff_id===s.id&&String(x.salary_month).slice(0,7)===month);return `<tr><td><b>${esc(s.name)}</b></td><td>${esc(s.role||'-')}</td><td>${esc(s.phone||'-')}</td><td>${money(s.salary)}</td><td>${money(pay?.paid_amount||0)}</td><td><button class="btn small secondary edit-staff" data-id="${s.id}">Manage</button></td></tr>`}).join('')||'<tr><td colspan="6" class="empty">No staff added yet.</td></tr>'}</table></div></div>`
 }
@@ -359,7 +359,7 @@ function staffModal(s={}){
  <div class="field"><label>Role / designation</label><input name="role" value="${esc(s.role)}"></div>
  <div class="field"><label>Phone</label><input name="phone" value="${esc(s.phone)}"></div>
  <div class="field"><label>Joining date</label><input name="join" type="date" value="${s.join_date||''}"></div>
- <div class="field"><label>Monthly salary</label><input name="salary" type="number" step="0.01" min="0" value="${s.salary||0}"></div>
+ <div class="field"><label>Fixed monthly salary (₹)</label><input name="salary" type="number" step="0.01" min="0" value="${s.salary||0}"><small class="muted">This is a reference amount. Attendance will not deduct from it automatically.</small></div>
  <div class="field"><label>Notes</label><input name="notes" value="${esc(s.notes)}"></div>
  </div><button class="btn accent" type="submit">Save staff</button><div id="staffMsg"></div></form>`);
  $('staffForm').onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target);const row={shop_id:state.shop.id,name:f.get('name'),role:f.get('role')||null,phone:f.get('phone')||null,join_date:f.get('join')||null,salary:Number(f.get('salary')||0),notes:f.get('notes')||null,active:true};const q=s.id?await sb.from('staff').update(row).eq('id',s.id):await sb.from('staff').insert(row);if(q.error){$('staffMsg').innerHTML=msg('error',q.error.message);return}closeModal();await loadAll();render()};
@@ -375,8 +375,8 @@ function attendanceModal(){
 function salaryModal(){
  const month=new Date().toISOString().slice(0,7);
  modal(`<div class="modal-head"><h3>Monthly salary records</h3><button class="btn secondary" onclick="window.closeModal()">Close</button></div>
- <div class="field"><label>Salary month</label><input id="salaryMonth" type="month" value="${month}"></div><div id="salaryRows"></div>`);
- const renderSal=()=>{const m=$('salaryMonth').value; $('salaryRows').innerHTML=state.staff.map(s=>{const p=state.salaryPayments.find(x=>x.staff_id===s.id&&String(x.salary_month).slice(0,7)===m);return `<div class="list-row"><div class="item-main"><strong>${esc(s.name)}</strong><span>Salary: ${money(s.salary)}</span></div><div style="display:flex;gap:7px;align-items:center"><input class="salary-paid" data-id="${s.id}" type="number" step="0.01" value="${p?.paid_amount||0}" style="width:110px;padding:8px;border:1px solid var(--line);border-radius:8px"><button class="btn small accent salary-save" data-id="${s.id}">Save</button></div></div>`}).join('')||'<div class="empty">Add staff first.</div>'};
+ <div class="field"><label>Salary month</label><input id="salaryMonth" type="month" value="${month}"></div><p class="muted" style="font-size:13px">Enter the amount you actually paid each employee. You calculate salary yourself—attendance (absent, half-day or leave) will not automatically change it. The amount saved is the month’s total paid so far; edit it if you make another payment.</p><div id="salaryRows"></div>`);
+ const renderSal=()=>{const m=$('salaryMonth').value; $('salaryRows').innerHTML=state.staff.map(s=>{const p=state.salaryPayments.find(x=>x.staff_id===s.id&&String(x.salary_month).slice(0,7)===m);return `<div class="list-row"><div class="item-main"><strong>${esc(s.name)}</strong><span>Fixed monthly salary: ${money(s.salary)} · Paid so far: ${money(p?.paid_amount||0)}</span></div><div style="display:flex;gap:7px;align-items:center"><label style="font-size:12px">Total paid (₹)</label><input class="salary-paid" data-id="${s.id}" type="number" min="0" step="0.01" value="${p?.paid_amount||0}" style="width:110px;padding:8px;border:1px solid var(--line);border-radius:8px"><button class="btn small accent salary-save" data-id="${s.id}">Save amount</button></div></div>`}).join('')||'<div class="empty">Add staff first.</div>'};
  $('salaryMonth').onchange=renderSal;renderSal();
  document.getElementById('salaryRows').onclick=async e=>{const b=e.target.closest('.salary-save');if(!b)return;const m=$('salaryMonth').value+'-01';const s=state.staff.find(x=>x.id===b.dataset.id);const paid=Number(document.querySelector('.salary-paid[data-id="'+b.dataset.id+'"]').value||0);const q=await sb.from('staff_salary_payments').upsert({shop_id:state.shop.id,staff_id:s.id,salary_month:m,base_salary:Number(s.salary||0),paid_amount:paid,payment_date:new Date().toISOString().slice(0,10),payment_method:'cash'},{onConflict:'staff_id,salary_month'});if(q.error)alert(q.error.message);else{await loadAll();salaryModal()}};
 }

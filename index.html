@@ -136,7 +136,7 @@ const sb = createClient(SUPABASE_URL, SUPABASE_KEY, {
 });
 
 const $ = id => document.getElementById(id);
-const state = { page:'dashboard', shop:null, products:[], customers:[], bills:[], billItems:[], payments:[], staff:[], attendance:[], salaryPayments:[], expenses:[], loading:false };
+const state = { page:'dashboard', shop:null, products:[], customers:[], bills:[], billItems:[], payments:[], staff:[], attendance:[], salaryPayments:[], expenses:[], salesReturns:[], loading:false };
 function applyTheme(theme){
   document.body.classList.toggle('dark',theme==='dark');
   localStorage.setItem('ritam-theme',theme);
@@ -181,17 +181,18 @@ async function loadAll(session){
     ['staff',sb.from('staff').select('*').eq('shop_id',id).eq('active',true).order('name')],
     ['attendance',sb.from('staff_attendance').select('*').eq('shop_id',id).order('attendance_date',{ascending:false})],
     ['salary payments',sb.from('staff_salary_payments').select('*').eq('shop_id',id).order('salary_month',{ascending:false})],
-    ['expenses',sb.from('expenses').select('*').eq('shop_id',id).order('expense_date',{ascending:false})]
+    ['expenses',sb.from('expenses').select('*').eq('shop_id',id).order('expense_date',{ascending:false})],
+    ['sales returns',sb.from('sales_returns').select('*,sales_return_items(*)').eq('shop_id',id).order('return_date',{ascending:false})]
   ];
   const results=await Promise.all(requests.map(async ([name,promise])=>{
     const r=await promise;
     if(r.error) throw new Error(name+': '+r.error.message);
     return r.data||[];
   }));
-  const [products,customers,bills,billItems,payments,staff,attendance,salaryPayments,expenses]=results;
+  const [products,customers,bills,billItems,payments,staff,attendance,salaryPayments,expenses,salesReturns]=results;
   state.products=products;state.customers=customers;state.bills=bills;
   state.billItems=billItems.filter(x=>state.bills.some(b=>b.id===x.bill_id));
-  state.payments=payments.filter(p=>!p.bill_id||!state.bills.some(b=>b.id===p.bill_id&&b.cancelled_at));state.staff=staff;state.attendance=attendance;state.salaryPayments=salaryPayments;state.expenses=expenses;
+  state.payments=payments.filter(p=>!p.bill_id||!state.bills.some(b=>b.id===p.bill_id&&b.cancelled_at));state.staff=staff;state.attendance=attendance;state.salaryPayments=salaryPayments;state.expenses=expenses;state.salesReturns=salesReturns;
 }
 async function showApp(session){
   $('auth').classList.add('hidden');
@@ -510,6 +511,7 @@ function viewBillModal(b){
   const c=state.customers.find(x=>x.id===b.customer_id);
   const items=state.billItems.filter(x=>x.bill_id===b.id);
   const paid=billPayments(b),due=billOutstanding(b),isCancelled=!!b.cancelled_at;
+  const returns=state.salesReturns.filter(r=>r.bill_id===b.id),returnedTotal=returns.reduce((sum,r)=>sum+Number(r.refund_amount||0),0);
   modal(`<div class="modal-head"><h3>Bill ${esc(b.bill_number)} ${isCancelled?'<span class="badge danger">CANCELLED</span>':''}</h3><div class="no-print"><button class="btn secondary" id="closeViewBill">Close</button></div></div>
   ${isCancelled?`<div class="error">This bill was cancelled on ${new Date(b.cancelled_at).toLocaleString('en-IN')}. Inventory has been restored. ${b.cancellation_reason?'<br>Reason: '+esc(b.cancellation_reason):''}</div>`:''}
   <div id="printBill" style="padding:10px;${isCancelled?'opacity:.65':''}">
@@ -518,6 +520,7 @@ function viewBillModal(b){
     <div class="table-wrap" style="margin-top:16px"><table class="table" style="min-width:0"><tr><th>Item</th><th>HSN</th><th>Qty</th><th>Rate</th><th>Amount</th></tr>${items.map(i=>`<tr><td>${esc(i.product_name)}</td><td>${esc(i.hsn_code||'-')}</td><td>${i.quantity} ${esc(i.unit)}</td><td>${money(i.rate)}</td><td>${money(i.amount)}</td></tr>`).join('')}</table></div>
     <div style="max-width:360px;margin:16px 0 0 auto"><div style="display:flex;justify-content:space-between"><span>Subtotal</span><b>${money(b.subtotal)}</b></div><div style="display:flex;justify-content:space-between"><span>Discount</span><b>${money(b.discount)}</b></div><div style="display:flex;justify-content:space-between"><span>Delivery / Transport</span><b>${money(b.delivery_charge||0)}</b></div><div style="display:flex;justify-content:space-between"><span>Labour</span><b>${money(b.labour_charge||0)}</b></div><div style="display:flex;justify-content:space-between;font-size:18px;margin-top:8px"><span>Total</span><b>${money(b.grand_total)}</b></div><div style="display:flex;justify-content:space-between"><span>Paid</span><b>${money(paid)}</b></div><div style="display:flex;justify-content:space-between"><span>Outstanding</span><b>${money(due)}</b></div></div>
   </div>
+  ${returns.length?`<div class="card" style="margin-top:14px"><h3>Return history</h3>${returns.map(r=>`<div style="padding:10px 0;border-bottom:1px solid var(--line)"><b>${esc(r.return_number||'Return')}</b> · ${new Date(r.return_date||r.created_at).toLocaleString('en-IN')}<br><span class="muted">Refund: ${money(r.refund_amount)} · Method: ${esc(r.refund_method||'-')}${r.notes?' · Notes: '+esc(r.notes):''}</span><div class="table-wrap"><table class="table" style="min-width:0"><tr><th>Returned item</th><th>Qty</th><th>Rate</th><th>Amount</th></tr>${(r.sales_return_items||[]).map(ri=>`<tr><td>${esc(ri.product_name)}</td><td>${ri.quantity} ${esc(ri.unit)}</td><td>${money(ri.rate)}</td><td>${money(ri.amount)}</td></tr>`).join('')}</table></div></div>`).join('')}<div style="text-align:right;padding-top:8px"><b>Total return value: ${money(returnedTotal)}</b></div></div>`:''}
   ${!isCancelled&&!b.customer_id&&due>0?`<div class="card no-print" style="margin-top:14px;padding:12px"><h3 style="margin:0 0 10px">Record payment for Walk-in / Cash bill</h3><div class="form-grid"><div class="field"><label>Amount received (₹)</label><input id="walkinPaymentAmount" type="number" min="0.01" max="${due.toFixed(2)}" step="0.01" value="${due.toFixed(2)}"></div><div class="field"><label>Payment method</label><select id="walkinPaymentMethod"><option value="cash" ${String(b.payment_method||"cash").toLowerCase()==="cash"?"selected":""}>Cash</option><option value="UPI" ${String(b.payment_method||"").toUpperCase()==="UPI"?"selected":""}>UPI</option><option value="bank transfer" ${String(b.payment_method||"").toLowerCase()==="bank transfer"?"selected":""}>Bank transfer</option></select></div></div><button class="btn accent" id="recordWalkinPayment">Save payment</button></div>`:""}
   <div class="toolbar no-print" style="margin-top:12px">${isCancelled?'<span class="badge danger">Cancelled bill — printing/sharing disabled</span>':'<button class="btn secondary" id="editBillDiscountBtn">Add / Update Discount</button><label for="billCopyMode" style="font-weight:700">Print copies</label><select id="billCopyMode" style="padding:10px;border:1px solid var(--line);border-radius:9px"><option value="both">Both: Buyer + Shop</option><option value="original">Original for Buyer only</option><option value="duplicate">Duplicate for Shop only</option></select><button class="btn accent" id="printBillBtn">Print / Save PDF</button><button class="btn secondary" id="whatsappBillBtn">WhatsApp</button><button class="btn secondary" id="sharePdfBtn">Share PDF</button>'}${isCancelled?'':'<button class="btn danger" id="cancelBillBtn">Cancel bill & restore stock</button>'}</div>`);
   $('closeViewBill').onclick=closeModal;

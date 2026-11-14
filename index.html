@@ -576,6 +576,12 @@ async function createBillPdf(b,c,items,paid,due,copyLabel='ORIGINAL FOR BUYER'){
   txt('Bill No.',153,27);txt(':',174,27);doc.setFont('helvetica','bold');txt(String(b.bill_number||''),R,27,{align:'right'});
   doc.setFont('helvetica','normal');txt('Invoice Date',153,34);txt(':',174,34);doc.setFont('helvetica','bold');txt(dateText,R,34,{align:'right'});
   doc.setFont('helvetica','normal');txt('Payment Mode',153,41);txt(':',174,41);doc.setFont('helvetica','bold');txt(due>0?(paid>0?'Part Paid / Due':'Credit / Due'):'Paid',R,41,{align:'right'});
+  // Shop contact details are presented in the invoice header, not the footer.
+  doc.setTextColor(...navy);doc.setFont('helvetica','bold');doc.setFontSize(6.8);
+  txt('PHONE  '+String(shop.phone||'9394988232 / 8638438992'),48,47);
+  txt('GSTIN  18AJXPD6696D1ZL',48,52.5);
+  doc.setTextColor(...muted);doc.setFont('helvetica','normal');doc.setFontSize(6.5);
+  txt(String(shop.address||'Abhayapur, North Guwahati, Opp. Gen X Edu Center, Assam - 781031').slice(0,105),48,58);
   line(L,70,R,70,blue,.6);
 
   // Customer and delivery cards
@@ -647,16 +653,11 @@ async function createBillPdf(b,c,items,paid,due,copyLabel='ORIGINAL FOR BUYER'){
   doc.setTextColor(...muted);doc.setFontSize(7.5);txt('Authorised Signatory',177,y+27,{align:'center'});
   doc.setTextColor(...navy);doc.setFont('helvetica','bold');doc.setFontSize(8);txt('RITAM ENTERPRISE',177,y+33,{align:'center'});
 
-  // Footer with Ritam Enterprise's official shop details.
-  doc.setFillColor(...navy);doc.rect(0,272,210,25,'F');
-  doc.setFillColor(...blue);doc.triangle(0,272,90,272,0,286,'F');
-  doc.setTextColor(...white);doc.setFont('helvetica','bold');doc.setFontSize(7.8);
-  txt('GSTIN: 18AJXPD6696D1ZL',L+3,276);
-  txt('Phone: 9394988232 / 8638438992',L+3,281);
-  doc.setFont('helvetica','normal');doc.setFontSize(7.2);
-  txt(String(shop.address||'Abhayapur, North Guwahati, Opp. Gen X Edu Center, Assam - 781031').slice(0,100),L+3,287);
-  if(shop.email){doc.setFontSize(7.0);txt(String(shop.email),L+3,292);}
-  doc.setTextColor(200,220,243);doc.setFont('helvetica','normal');doc.setFontSize(6.8);txt('THANK YOU FOR YOUR BUSINESS',R,291,{align:'right'});
+  // Clean, minimal footer: shop contact details are already in the top header.
+  doc.setFillColor(...navy);doc.rect(0,282,210,15,'F');
+  doc.setFillColor(...blue);doc.triangle(0,282,62,282,0,292,'F');
+  doc.setTextColor(...white);doc.setFont('helvetica','bold');doc.setFontSize(8);
+  txt('THANK YOU FOR YOUR BUSINESS',R,291,{align:'right'});
   return new File([doc.output('blob')],'Ritam-Enterprise-'+b.bill_number+'-'+copyLabel.toLowerCase().replace(/[^a-z]+/g,'-')+'.pdf',{type:'application/pdf'});
 }
 async function createBillCopiesPdf(b,c,items,paid,due,labels){

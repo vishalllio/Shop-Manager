@@ -647,14 +647,15 @@ async function createBillPdf(b,c,items,paid,due,copyLabel='ORIGINAL FOR BUYER'){
   doc.setTextColor(...muted);doc.setFontSize(7.5);txt('Authorised Signatory',177,y+27,{align:'center'});
   doc.setTextColor(...navy);doc.setFont('helvetica','bold');doc.setFontSize(8);txt('RITAM ENTERPRISE',177,y+33,{align:'center'});
 
-  // Footer with business contact details and a simple construction-material accent.
+  // Footer with Ritam Enterprise's official shop details.
   doc.setFillColor(...navy);doc.rect(0,272,210,25,'F');
   doc.setFillColor(...blue);doc.triangle(0,272,90,272,0,286,'F');
-  doc.setTextColor(...white);doc.setFont('helvetica','bold');doc.setFontSize(8.2);
-  if(shop.phone) txt('Phone: '+String(shop.phone),L+3,281);
-  else txt('RITAM ENTERPRISE',L+3,281);
-  if(shop.address){doc.setFont('helvetica','normal');doc.setFontSize(7.4);txt(String(shop.address).slice(0,78),L+3,287);}
-  if(shop.email){doc.setFont('helvetica','normal');doc.setFontSize(7.4);txt(String(shop.email),L+3,292);}
+  doc.setTextColor(...white);doc.setFont('helvetica','bold');doc.setFontSize(7.8);
+  txt('GSTIN: 18AJXPD6696D1ZL',L+3,276);
+  txt('Phone: 9394988232 / 8638438992',L+3,281);
+  doc.setFont('helvetica','normal');doc.setFontSize(7.2);
+  txt(String(shop.address||'Abhayapur, North Guwahati, Opp. Gen X Edu Center, Assam - 781031').slice(0,100),L+3,287);
+  if(shop.email){doc.setFontSize(7.0);txt(String(shop.email),L+3,292);}
   doc.setTextColor(200,220,243);doc.setFont('helvetica','normal');doc.setFontSize(6.8);txt('THANK YOU FOR YOUR BUSINESS',R,291,{align:'right'});
   return new File([doc.output('blob')],'Ritam-Enterprise-'+b.bill_number+'-'+copyLabel.toLowerCase().replace(/[^a-z]+/g,'-')+'.pdf',{type:'application/pdf'});
 }
